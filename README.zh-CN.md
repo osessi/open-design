@@ -1,9 +1,9 @@
 # Open Design
 
-> **给设计的 Claude Code。** 一个本地优先、可部署到 Vercel 的开源 [Claude Design][cd] 复刻 —— 你机器上已经装好的 coding agent（Claude Code、Codex、Cursor Agent、Gemini CLI、OpenCode、Qwen）就是设计引擎，由可组合的 **Skills** 和 **71 套品牌级 Design System** 驱动。
+> **[Claude Design][cd] 的开源替代品。** 本地优先、可部署到 Vercel、每一层都 BYOK —— 你机器上已经装好的 coding agent（Claude Code、Codex、Cursor Agent、Gemini CLI、OpenCode、Qwen）就是设计引擎，由 **19 个可组合 Skills** 和 **71 套品牌级 Design System** 驱动。
 
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="Open Design banner —— 占位图，等待替换为真实产品截图" width="100%" />
+  <img src="docs/assets/banner.png" alt="Open Design 封面：与本地 AI 智能体共同设计" width="100%" />
 </p>
 
 <p align="center">
@@ -20,13 +20,13 @@
 
 ## 为什么要做这个
 
-Anthropic 的 [Claude Design][cd]（2026-04-17 发布，基于 Opus 4.7）让大家第一次看到：当一个 LLM 不再写废话、开始直接交付设计成品，会是什么样子。它瞬间出圈 —— 然后保持闭源、付费、只跑在云上、绑定 Anthropic 的模型和 Anthropic 的内部 skill。
+Anthropic 的 [Claude Design][cd]（2026-04-17 发布，基于 Opus 4.7）让大家第一次看到：当一个 LLM 不再写废话、开始直接交付设计成品，会是什么样子。它瞬间出圈 —— 然后保持**闭源**、付费、只跑在云上、绑定 Anthropic 的模型和 Anthropic 的内部 skill。没有 checkout，没有自托管，没有 Vercel 部署，也换不了自己的 agent。
 
-**Open Design（OD）是它的开源底座。** 我们不做 agent —— 你笔记本上最强的 coding agent 已经装好了。我们要做的，是把它接进一个 skill 驱动的设计工作流，跑在一个普通的 Web 应用里：本地 `pnpm dev`，云端 `vercel deploy`，每一层都 BYOK（自带 Key）。
+**Open Design（OD）就是它的开源替代品。** 同一套 loop、同一种「artifact-first」心智模型，但没有锁定。我们不做 agent —— 你笔记本上最强的 coding agent 已经装好了。我们要做的，是把它接进一个 skill 驱动的设计工作流，跑在一个普通的 Web 应用里：本地 `pnpm dev`，云端 `vercel deploy`，每一层都 BYOK（自带 Key）。
 
 输入「帮我做一份杂志风的种子轮 pitch deck」。在模型挥洒第一个像素之前，**初始化问题表单**已经先跳出来。Agent 从 5 套精挑的视觉方向里选一个。一张活的 `TodoWrite` 计划卡片实时流入 UI。Daemon 在磁盘上构建出一个真实的项目目录，里面有 seed 模板、布局库、自检 checklist。Agent **强制 pre-flight** 读取它们，对自己的输出跑一轮**五维评审**，几秒后吐出一个 `<artifact>`，渲染在沙盒 iframe 里。
 
-这不是「AI 试图做点设计」。这是一个被提示词栈训练得像高级设计师一样工作的 AI —— 有可用的文件系统、有确定性的色板库、有 checklist 文化。
+这不是「AI 试图做点设计」。这是一个被提示词栈训练得像高级设计师一样工作的 AI —— 有可用的文件系统、有确定性的色板库、有 checklist 文化 —— 也就是 Claude Design 立下的那条线，只是这次它开源、归你。
 
 OD 站在四个开源项目的肩膀上：
 
@@ -52,50 +52,129 @@ OD 站在四个开源项目的肩膀上：
 
 ## 效果展示
 
-> **截图位待补。** 下方每张卡片都是占位 SVG —— 截好真实图后把 `docs/screenshots/*.svg` 替换为 `.png` / `.jpg`，并把对应 `<img src=…>` 的扩展名同步改掉即可。
-
 <table>
 <tr>
 <td width="50%">
-<img src="docs/screenshots/01-entry-view.svg" alt="01 · 入口页 —— 占位图，等待替换为真实截图" /><br/>
+<img src="docs/screenshots/01-entry-view.png" alt="01 · 入口页" /><br/>
 <sub><b>入口页</b> —— 选 skill、选 design system、写一行需求。同一个表面服务原型、deck、移动端、dashboard、editorial 页面所有 mode。</sub>
 </td>
 <td width="50%">
-<img src="docs/screenshots/02-question-form.svg" alt="02 · 初始化问题表单 —— 占位图，等待替换为真实截图" /><br/>
+<img src="docs/screenshots/02-question-form.png" alt="02 · 初始化问题表单" /><br/>
 <sub><b>初始化问题表单</b> —— 模型动笔之前，OD 先把需求锁住：surface、受众、调性、品牌上下文、规模。30 秒勾选项秒杀 30 分钟来回返工。</sub>
 </td>
 </tr>
 <tr>
 <td width="50%">
-<img src="docs/screenshots/03-direction-picker.svg" alt="03 · 方向选择器 —— 占位图，等待替换为真实截图" /><br/>
+<img src="docs/screenshots/03-direction-picker.png" alt="03 · 方向选择器" /><br/>
 <sub><b>方向选择器</b> —— 用户没有品牌上下文时，agent 自动跳第二个表单，5 套精选方向（Monocle / Modern Minimal / Tech Utility / Brutalist / Soft Warm）一个 radio 选完，色板 + 字体栈直接锁定，没有 freestyle 空间。</sub>
 </td>
 <td width="50%">
-<img src="docs/screenshots/04-todo-progress.svg" alt="04 · 实时 todo 进度 —— 占位图，等待替换为真实截图" /><br/>
+<img src="docs/screenshots/04-todo-progress.png" alt="04 · 实时 todo 进度" /><br/>
 <sub><b>实时 todo 进度</b> —— Agent 的计划以活卡片形式流入 UI。<code>in_progress</code> → <code>completed</code> 实时切换。用户能在中途以极低成本介入纠偏。</sub>
 </td>
 </tr>
 <tr>
 <td width="50%">
-<img src="docs/screenshots/05-preview-iframe.svg" alt="05 · 沙盒预览 —— 占位图，等待替换为真实截图" /><br/>
+<img src="docs/screenshots/05-preview-iframe.png" alt="05 · 沙盒预览" /><br/>
 <sub><b>沙盒预览</b> —— 每个 <code>&lt;artifact&gt;</code> 都在干净的 srcdoc iframe 里渲染。可在文件工作区里就地编辑；可下载为 HTML / PDF / ZIP。</sub>
 </td>
 <td width="50%">
-<img src="docs/screenshots/06-design-systems-library.svg" alt="06 · 71 套 design system 库 —— 占位图，等待替换为真实截图" /><br/>
+<img src="docs/screenshots/06-design-systems-library.png" alt="06 · 71 套 design system 库" /><br/>
 <sub><b>71 套 design system 库</b> —— 每套产品系统都展示 4 色色卡。点进去看完整的 <code>DESIGN.md</code>、色板网格、live showcase。</sub>
 </td>
 </tr>
 <tr>
 <td width="50%">
-<img src="docs/screenshots/07-magazine-deck.svg" alt="07 · 杂志风 deck —— 占位图，等待替换为真实截图" /><br/>
+<img src="docs/screenshots/07-magazine-deck.png" alt="07 · 杂志风 deck" /><br/>
 <sub><b>Deck 模式（guizang-ppt）</b> —— 内置的 <a href="https://github.com/op7418/guizang-ppt-skill"><code>guizang-ppt-skill</code></a> 原样接入。杂志版式、WebGL hero 背景、单文件 HTML 输出、可导 PDF。</sub>
 </td>
 <td width="50%">
-<img src="docs/screenshots/08-mobile-app.svg" alt="08 · 移动端原型 —— 占位图，等待替换为真实截图" /><br/>
+<img src="docs/screenshots/08-mobile-app.png" alt="08 · 移动端原型" /><br/>
 <sub><b>移动端原型</b> —— 像素级精确的 iPhone 15 Pro chrome（灵动岛、状态栏 SVG、Home Indicator）。多屏原型直接复用 <code>/frames/</code> 共享资源，agent 永远不需要重新画一遍手机。</sub>
 </td>
 </tr>
 </table>
+
+## 内置 Skills
+
+19 个 skill，每个一个文件夹，都遵循 Claude Code 的 [`SKILL.md`][skill] 规范，并叠加 OD 的 `od:` frontmatter（`mode`、`platform`、`scenario`、`preview`、`design_system`）。
+
+### 示例展示（Showcase examples）
+
+视觉表现最强、最适合上手第一跑的几条 skill。每条都附带可直接打开的 `example.html` —— 不用登录、不用配置，先看产出再下单。
+
+<table>
+<tr>
+<td width="50%" valign="top">
+<a href="skills/dating-web/"><img src="docs/screenshots/skills/dating-web.png" alt="dating-web" /></a><br/>
+<sub><b><a href="skills/dating-web/"><code>dating-web</code></a></b> · <i>prototype</i><br/>消费级约会 / 婚恋仪表盘 —— 左侧栏、社区动态 ticker、头部 KPI、30 天双向匹配柱状图，editorial 字体，克制点缀色。</sub>
+</td>
+<td width="50%" valign="top">
+<a href="skills/digital-eguide/"><img src="docs/screenshots/skills/digital-eguide.png" alt="digital-eguide" /></a><br/>
+<sub><b><a href="skills/digital-eguide/"><code>digital-eguide</code></a></b> · <i>template</i><br/>两页数字 e-guide —— 封面（标题、作者、TOC 预告）+ 内文跨页（pull-quote + 步骤列表），创作者 / 生活方式风。</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<a href="skills/email-marketing/"><img src="docs/screenshots/skills/email-marketing.png" alt="email-marketing" /></a><br/>
+<sub><b><a href="skills/email-marketing/"><code>email-marketing</code></a></b> · <i>prototype</i><br/>品牌新品发布邮件 —— 顶部 wordmark、hero 图、标题锁排、主 CTA、规格网格。居中单列 + 表格降级，邮件客户端安全。</sub>
+</td>
+<td width="50%" valign="top">
+<a href="skills/gamified-app/"><img src="docs/screenshots/skills/gamified-app.png" alt="gamified-app" /></a><br/>
+<sub><b><a href="skills/gamified-app/"><code>gamified-app</code></a></b> · <i>prototype</i><br/>三屏游戏化移动 app 原型，黑色舞台 —— 封面 / 今日任务（XP 缎带 + 等级条）/ 任务详情。</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<a href="skills/mobile-onboarding/"><img src="docs/screenshots/skills/mobile-onboarding.png" alt="mobile-onboarding" /></a><br/>
+<sub><b><a href="skills/mobile-onboarding/"><code>mobile-onboarding</code></a></b> · <i>prototype</i><br/>三屏移动端引导流 —— splash、价值主张、登录。状态栏、滑动点、主 CTA。</sub>
+</td>
+<td width="50%" valign="top">
+<a href="skills/motion-frames/"><img src="docs/screenshots/skills/motion-frames.png" alt="motion-frames" /></a><br/>
+<sub><b><a href="skills/motion-frames/"><code>motion-frames</code></a></b> · <i>prototype</i><br/>单帧 motion 设计 hero，CSS 循环动画 —— 旋转字环、地球、计时器。可直接交给 HyperFrames 等关键帧导出。</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<a href="skills/social-carousel/"><img src="docs/screenshots/skills/social-carousel.png" alt="social-carousel" /></a><br/>
+<sub><b><a href="skills/social-carousel/"><code>social-carousel</code></a></b> · <i>prototype</i><br/>1080×1080 三连社媒轮播图 —— 三张电影感面板，标题前后呼应，品牌标识、loop 标记。</sub>
+</td>
+<td width="50%" valign="top">
+<a href="skills/sprite-animation/"><img src="docs/screenshots/skills/sprite-animation.png" alt="sprite-animation" /></a><br/>
+<sub><b><a href="skills/sprite-animation/"><code>sprite-animation</code></a></b> · <i>prototype</i><br/>像素 / 8-bit 动画解释器单帧 —— 米白通屏、像素吉祥物、动感日文标题、循环 CSS keyframes，可直接录屏成竖版视频。</sub>
+</td>
+</tr>
+</table>
+
+### 设计交付类
+
+| Skill | Mode | 默认场景 | 产出 |
+|---|---|---|---|
+| [`web-prototype`](skills/web-prototype/) | prototype | 桌面 | 单页 HTML —— landing、营销、hero |
+| [`saas-landing`](skills/saas-landing/) | prototype | 桌面 | hero / features / pricing / CTA 营销版式 |
+| [`dashboard`](skills/dashboard/) | prototype | 桌面 | 带侧栏 + 数据密集型的后台 |
+| [`pricing-page`](skills/pricing-page/) | prototype | 桌面 | 独立定价页 + 对比表 |
+| [`docs-page`](skills/docs-page/) | prototype | 桌面 | 三栏文档版式 |
+| [`blog-post`](skills/blog-post/) | prototype | 桌面 | 长文 editorial |
+| [`mobile-app`](skills/mobile-app/) | prototype | 移动 | 带 iPhone 15 Pro / Pixel 外壳的 app 屏 |
+| [`simple-deck`](skills/simple-deck/) | deck | 桌面 | 极简横滑 deck |
+| [`guizang-ppt`](skills/guizang-ppt/) | deck | **deck 默认** | 杂志风网页 PPT —— 来自 [op7418/guizang-ppt-skill][guizang] |
+
+### 文档与办公产物类
+
+| Skill | Mode | 产出 |
+|---|---|---|
+| [`pm-spec`](skills/pm-spec/) | template | PM 规范文档 + 目录 + 决策日志 |
+| [`weekly-update`](skills/weekly-update/) | template | 团队周报：进度 / 阻塞 / 下一步 |
+| [`meeting-notes`](skills/meeting-notes/) | template | 会议决策纪要 |
+| [`eng-runbook`](skills/eng-runbook/) | template | 故障 runbook |
+| [`finance-report`](skills/finance-report/) | template | 高管财务摘要 |
+| [`hr-onboarding`](skills/hr-onboarding/) | template | 岗位入职计划 |
+| [`invoice`](skills/invoice/) | template | 单页发票 |
+| [`kanban-board`](skills/kanban-board/) | template | 看板快照 |
+| [`team-okrs`](skills/team-okrs/) | template | OKR 计分表 |
+
+新增一个 skill 就是新增一个文件夹。读 [`docs/skills-protocol.md`](docs/skills-protocol.md) 了解扩展 frontmatter，fork 一个现有 skill，重启 daemon 即生效。
 
 ## 六个底层设计
 
@@ -320,59 +399,10 @@ open-design/
     └── artifacts/                 ← 单次保存的 artifact
 ```
 
-## 内置 Skills
-
-19 个 skill，每个一个文件夹，都遵循 Claude Code 的 [`SKILL.md`][skill] 规范，并叠加 OD 的 `od:` frontmatter（`mode`、`platform`、`scenario`、`preview`、`design_system`）。
-
-### 示例展示（Showcase examples）
-
-视觉表现最强、最适合上手第一跑的几条 skill。每条都附带可直接打开的 `example.html`，先看产出再下单。
-
-| Skill | Mode | 产出 |
-|---|---|---|
-| [`dating-web`](skills/dating-web/) | prototype | 消费级约会 / 婚恋仪表盘 —— 左侧栏、社区动态 ticker、头部 KPI、30 天双向匹配柱状图，editorial 字体，克制点缀色 |
-| [`digital-eguide`](skills/digital-eguide/) | template | 两页数字 e-guide —— 封面（标题、作者、TOC 预告）+ 内文跨页（pull-quote + 步骤列表），创作者 / 生活方式风 |
-| [`email-marketing`](skills/email-marketing/) | prototype | 品牌新品发布邮件 —— 顶部 wordmark、hero 图、标题锁排、主 CTA、规格网格。居中单列 + 表格降级，邮件客户端安全 |
-| [`gamified-app`](skills/gamified-app/) | prototype | 三屏游戏化移动 app 原型，黑色舞台 —— 封面 / 今日任务（XP 缎带 + 等级条）/ 任务详情 |
-| [`mobile-onboarding`](skills/mobile-onboarding/) | prototype | 三屏移动端引导流 —— splash、价值主张、登录。状态栏、滑动点、主 CTA |
-| [`motion-frames`](skills/motion-frames/) | prototype | 单帧 motion 设计 hero，CSS 循环动画 —— 旋转字环、地球、计时器。可直接交给 HyperFrames 等关键帧导出 |
-| [`social-carousel`](skills/social-carousel/) | prototype | 1080×1080 三连社媒轮播图 —— 三张电影感面板，标题前后呼应，品牌标识、loop 标记 |
-| [`sprite-animation`](skills/sprite-animation/) | prototype | 像素 / 8-bit 动画解释器单帧 —— 米白通屏、像素吉祥物、动感日文标题、循环 CSS keyframes，可直接录屏成竖版视频 |
-
-### 设计交付类
-
-| Skill | Mode | 默认场景 | 产出 |
-|---|---|---|---|
-| [`web-prototype`](skills/web-prototype/) | prototype | 桌面 | 单页 HTML —— landing、营销、hero |
-| [`saas-landing`](skills/saas-landing/) | prototype | 桌面 | hero / features / pricing / CTA 营销版式 |
-| [`dashboard`](skills/dashboard/) | prototype | 桌面 | 带侧栏 + 数据密集型的后台 |
-| [`pricing-page`](skills/pricing-page/) | prototype | 桌面 | 独立定价页 + 对比表 |
-| [`docs-page`](skills/docs-page/) | prototype | 桌面 | 三栏文档版式 |
-| [`blog-post`](skills/blog-post/) | prototype | 桌面 | 长文 editorial |
-| [`mobile-app`](skills/mobile-app/) | prototype | 移动 | 带 iPhone 15 Pro / Pixel 外壳的 app 屏 |
-| [`simple-deck`](skills/simple-deck/) | deck | 桌面 | 极简横滑 deck |
-| [`guizang-ppt`](skills/guizang-ppt/) | deck | **deck 默认** | 杂志风网页 PPT —— 来自 [op7418/guizang-ppt-skill][guizang] |
-
-### 文档与办公产物类
-
-| Skill | Mode | 产出 |
-|---|---|---|
-| [`pm-spec`](skills/pm-spec/) | template | PM 规范文档 + 目录 + 决策日志 |
-| [`weekly-update`](skills/weekly-update/) | template | 团队周报：进度 / 阻塞 / 下一步 |
-| [`meeting-notes`](skills/meeting-notes/) | template | 会议决策纪要 |
-| [`eng-runbook`](skills/eng-runbook/) | template | 故障 runbook |
-| [`finance-report`](skills/finance-report/) | template | 高管财务摘要 |
-| [`hr-onboarding`](skills/hr-onboarding/) | template | 岗位入职计划 |
-| [`invoice`](skills/invoice/) | template | 单页发票 |
-| [`kanban-board`](skills/kanban-board/) | template | 看板快照 |
-| [`team-okrs`](skills/team-okrs/) | template | OKR 计分表 |
-
-新增一个 skill 就是新增一个文件夹。读 [`docs/skills-protocol.md`](docs/skills-protocol.md) 了解扩展 frontmatter，fork 一个现有 skill，重启 daemon 即生效。
-
 ## Design System
 
 <p align="center">
-  <img src="docs/assets/design-systems-library.svg" alt="71 套 design system 库 —— 占位图，等待替换为真实截图" width="100%" />
+  <img src="docs/assets/design-systems-library.png" alt="71 套 Design Systems 库 — 编辑版式双页" width="100%" />
 </p>
 
 71 套开箱即用，每套一个 [`DESIGN.md`](design-systems/README.md)：
@@ -450,7 +480,7 @@ open-design/
 | PPT skill 复用 | N/A | 内置 | **[`guizang-ppt-skill`][guizang] 直接接入** |
 | 计费门槛 | Pro / Max / Team | BYOK | **BYOK** |
 
-[cd]: https://www.anthropic.com/news/claude-design
+[cd]: https://x.com/claudeai/status/2045156267690213649
 [ocod]: https://github.com/OpenCoworkAI/open-codesign
 [piai]: https://github.com/mariozechner/pi-ai
 [acd]: https://github.com/VoltAgent/awesome-claude-design
@@ -479,7 +509,7 @@ Daemon 启动时从 `PATH` 自动检测，无需配置。
 
 | 项目 | 在这里的角色 |
 |---|---|
-| [`Claude Design`][cd] | 本仓库为它提供开源底座的闭源产品。 |
+| [`Claude Design`][cd] | 本仓库为之提供开源替代的闭源产品。 |
 | [**`alchaincyf/huashu-design`**（花叔的画术）](https://github.com/alchaincyf/huashu-design) | 设计哲学的核心。Junior-Designer 工作流、5 步品牌资产协议、anti-AI-slop checklist、五维自评审、以及方向选择器背后的「5 流派 × 20 种设计哲学」库 —— 全部蒸馏进 [`src/prompts/discovery.ts`](src/prompts/discovery.ts) 与 [`src/prompts/directions.ts`](src/prompts/directions.ts)。 |
 | [**`op7418/guizang-ppt-skill`**（歸藏）][guizang] | Magazine-web-PPT skill 原样捆绑在 [`skills/guizang-ppt/`](skills/guizang-ppt/) 下，原 LICENSE 保留。Deck 模式默认。P0/P1/P2 checklist 文化也被借给了所有其他 skill。 |
 | [**`multica-ai/multica`**](https://github.com/multica-ai/multica) | Daemon + adapter 架构。PATH 扫描式 agent 检测、本地 daemon 作为唯一特权进程、agent-as-teammate 世界观。我们采纳模型，不 vendor 代码。 |
@@ -508,7 +538,15 @@ Daemon 启动时从 `PATH` 自动检测，无需配置。
 
 这是一个早期实现 —— 闭环（检测 → 选 skill + design system → 对话 → 解析 `<artifact>` → 预览 → 保存）已经端到端跑通。提示词栈和 skill 库是价值最重的部分，目前已稳定。组件级 UI 仍在每天迭代。
 
-欢迎 issue、PR、新 skill、新 design system。
+## 贡献
+
+欢迎 issue、PR、新 skill、新 design system。收益最高的贡献往往就是一个文件夹、一份 Markdown，或者一个 PR 大小的 adapter：
+
+- **加一个 skill** —— 往 [`skills/`](skills/) 丢一个文件夹，遵循 [`SKILL.md`][skill] 规范。
+- **加一套 design system** —— 往 [`design-systems/<brand>/`](design-systems/) 丢一份 `DESIGN.md`，用 9 段式 schema。
+- **接入一个新的 coding-agent CLI** —— 在 [`daemon/agents.js`](daemon/agents.js) 里加一项。
+
+完整流程、合并硬线、代码风格、我们不接收的 PR 类型 → [`CONTRIBUTING.zh-CN.md`](CONTRIBUTING.zh-CN.md)（[English](CONTRIBUTING.md)）。
 
 ## License
 

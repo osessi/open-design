@@ -1,9 +1,9 @@
 # Open Design
 
-> **Claude Code, but for design.** A local-first, web-deployable open replica of Anthropic's [Claude Design][cd] — your existing coding agent (Claude Code, Codex, Cursor Agent, Gemini CLI, OpenCode, Qwen) becomes the design engine, driven by composable **Skills** and **71 brand-grade Design Systems**.
+> **The open-source alternative to [Claude Design][cd].** Local-first, web-deployable, BYOK at every layer — your existing coding agent (Claude Code, Codex, Cursor Agent, Gemini CLI, OpenCode, Qwen) becomes the design engine, driven by **19 composable Skills** and **71 brand-grade Design Systems**.
 
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="Open Design banner — placeholder, replace with the live UI hero shot" width="100%" />
+  <img src="docs/assets/banner.png" alt="Open Design — editorial cover: design with the agent on your laptop" width="100%" />
 </p>
 
 <p align="center">
@@ -20,13 +20,13 @@
 
 ## Why this exists
 
-Anthropic's [Claude Design][cd] (released 2026-04-17, Opus 4.7) showed what happens when an LLM stops writing prose and starts shipping design artifacts. It went viral — and stayed closed, paid-only, cloud-only, locked to Anthropic's model and Anthropic's skills.
+Anthropic's [Claude Design][cd] (released 2026-04-17, Opus 4.7) showed what happens when an LLM stops writing prose and starts shipping design artifacts. It went viral — and stayed closed-source, paid-only, cloud-only, locked to Anthropic's model and Anthropic's skills. There is no checkout, no self-host, no Vercel deploy, no swap-in-your-own-agent.
 
-**Open Design (OD) is the open substrate.** We don't build an agent — the strongest coding agents already live on your laptop. We wire them into a skill-driven design workflow that runs on `pnpm dev`, deploys to Vercel, and stays BYOK at every layer.
+**Open Design (OD) is the open-source alternative.** Same loop, same artifact-first mental model, none of the lock-in. We don't ship an agent — the strongest coding agents already live on your laptop. We wire them into a skill-driven design workflow that runs on `pnpm dev`, deploys to Vercel, and stays BYOK at every layer.
 
 Type `make me a magazine-style pitch deck for our seed round`. The interactive question form pops up before the model improvises a single pixel. The agent picks one of five curated visual directions. A live `TodoWrite` plan streams into the UI. The daemon builds a real on-disk project folder with a seed template, layout library, and self-check checklist. The agent reads them — pre-flight enforced — runs a five-dimensional critique against its own output, and emits a single `<artifact>` that renders in a sandboxed iframe seconds later.
 
-That's not "AI tries to design something". That's an AI that has been trained, by the prompt stack, to behave like a senior designer with a working filesystem, a deterministic palette library, and a checklist culture.
+That's not "AI tries to design something". That's an AI that has been trained, by the prompt stack, to behave like a senior designer with a working filesystem, a deterministic palette library, and a checklist culture — exactly the bar Claude Design set, but open and yours.
 
 OD stands on four open-source shoulders:
 
@@ -52,50 +52,129 @@ OD stands on four open-source shoulders:
 
 ## Demo
 
-> **Screenshots pending.** Every card below is a placeholder SVG — replace `docs/screenshots/*.svg` with real `.png`/`.jpg` captures and bump the `<img src=…>` extension when you do.
-
 <table>
 <tr>
 <td width="50%">
-<img src="docs/screenshots/01-entry-view.svg" alt="01 · Entry view — placeholder, replace with the real screenshot" /><br/>
+<img src="docs/screenshots/01-entry-view.png" alt="01 · Entry view" /><br/>
 <sub><b>Entry view</b> — pick a skill, pick a design system, type the brief. The same surface for prototypes, decks, mobile apps, dashboards, and editorial pages.</sub>
 </td>
 <td width="50%">
-<img src="docs/screenshots/02-question-form.svg" alt="02 · Discovery form — placeholder, replace with the real screenshot" /><br/>
+<img src="docs/screenshots/02-question-form.png" alt="02 · Turn-1 discovery form" /><br/>
 <sub><b>Turn-1 discovery form</b> — before the model writes a pixel, OD locks the brief: surface, audience, tone, brand context, scale. 30 seconds of radios beats 30 minutes of redirects.</sub>
 </td>
 </tr>
 <tr>
 <td width="50%">
-<img src="docs/screenshots/03-direction-picker.svg" alt="03 · Direction picker — placeholder, replace with the real screenshot" /><br/>
+<img src="docs/screenshots/03-direction-picker.png" alt="03 · Direction picker" /><br/>
 <sub><b>Direction picker</b> — when the user has no brand, the agent emits a second form with 5 curated directions (Monocle / Modern Minimal / Tech Utility / Brutalist / Soft Warm). One radio click → a deterministic palette + font stack, no model freestyle.</sub>
 </td>
 <td width="50%">
-<img src="docs/screenshots/04-todo-progress.svg" alt="04 · Live todo progress — placeholder, replace with the real screenshot" /><br/>
+<img src="docs/screenshots/04-todo-progress.png" alt="04 · Live todo progress" /><br/>
 <sub><b>Live todo progress</b> — the agent's plan streams as a live card. <code>in_progress</code> → <code>completed</code> updates land in real time. The user can redirect cheaply, mid-flight.</sub>
 </td>
 </tr>
 <tr>
 <td width="50%">
-<img src="docs/screenshots/05-preview-iframe.svg" alt="05 · Sandboxed preview — placeholder, replace with the real screenshot" /><br/>
+<img src="docs/screenshots/05-preview-iframe.png" alt="05 · Sandboxed preview" /><br/>
 <sub><b>Sandboxed preview</b> — every <code>&lt;artifact&gt;</code> renders in a clean srcdoc iframe. Editable in place via the file workspace; downloadable as HTML, PDF, ZIP.</sub>
 </td>
 <td width="50%">
-<img src="docs/screenshots/06-design-systems-library.svg" alt="06 · 71-system library — placeholder, replace with the real screenshot" /><br/>
+<img src="docs/screenshots/06-design-systems-library.png" alt="06 · 71-system library" /><br/>
 <sub><b>71-system library</b> — every product system shows its 4-color signature. Click for the full <code>DESIGN.md</code>, swatch grid, and live showcase.</sub>
 </td>
 </tr>
 <tr>
 <td width="50%">
-<img src="docs/screenshots/07-magazine-deck.svg" alt="07 · Magazine deck — placeholder, replace with the real screenshot" /><br/>
+<img src="docs/screenshots/07-magazine-deck.png" alt="07 · Magazine deck" /><br/>
 <sub><b>Deck mode (guizang-ppt)</b> — the bundled <a href="https://github.com/op7418/guizang-ppt-skill"><code>guizang-ppt-skill</code></a> drops in unchanged. Magazine layouts, WebGL hero backgrounds, single-file HTML output, PDF export.</sub>
 </td>
 <td width="50%">
-<img src="docs/screenshots/08-mobile-app.svg" alt="08 · Mobile prototype — placeholder, replace with the real screenshot" /><br/>
+<img src="docs/screenshots/08-mobile-app.png" alt="08 · Mobile prototype" /><br/>
 <sub><b>Mobile prototype</b> — pixel-accurate iPhone 15 Pro chrome (Dynamic Island, status bar SVGs, home indicator). Multi-screen prototypes use the shared <code>/frames/</code> assets so the agent never re-draws a phone.</sub>
 </td>
 </tr>
 </table>
+
+## Skills
+
+19 skills ship in the box. Each is a folder under [`skills/`](skills/) following the Claude Code [`SKILL.md`][skill] convention with an extended `od:` frontmatter (`mode`, `platform`, `scenario`, `preview`, `design_system`).
+
+### Showcase examples
+
+The visually distinctive skills you'll most likely run first. Each ships a real `example.html` you can open straight from the repo to see exactly what the agent will produce — no auth, no setup.
+
+<table>
+<tr>
+<td width="50%" valign="top">
+<a href="skills/dating-web/"><img src="docs/screenshots/skills/dating-web.png" alt="dating-web" /></a><br/>
+<sub><b><a href="skills/dating-web/"><code>dating-web</code></a></b> · <i>prototype</i><br/>Consumer dating / matchmaking dashboard — left rail nav, ticker bar, KPIs, 30-day mutual-matches chart, editorial typography.</sub>
+</td>
+<td width="50%" valign="top">
+<a href="skills/digital-eguide/"><img src="docs/screenshots/skills/digital-eguide.png" alt="digital-eguide" /></a><br/>
+<sub><b><a href="skills/digital-eguide/"><code>digital-eguide</code></a></b> · <i>template</i><br/>Two-spread digital e-guide — cover (title, author, TOC teaser) + lesson spread with pull-quote and step list. Creator / lifestyle tone.</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<a href="skills/email-marketing/"><img src="docs/screenshots/skills/email-marketing.png" alt="email-marketing" /></a><br/>
+<sub><b><a href="skills/email-marketing/"><code>email-marketing</code></a></b> · <i>prototype</i><br/>Brand product-launch HTML email — masthead, hero image, headline lockup, CTA, specs grid. Centered single-column, table-fallback safe.</sub>
+</td>
+<td width="50%" valign="top">
+<a href="skills/gamified-app/"><img src="docs/screenshots/skills/gamified-app.png" alt="gamified-app" /></a><br/>
+<sub><b><a href="skills/gamified-app/"><code>gamified-app</code></a></b> · <i>prototype</i><br/>Three-frame gamified mobile-app prototype on a dark showcase stage — cover, today's quests with XP ribbons + level bar, quest detail.</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<a href="skills/mobile-onboarding/"><img src="docs/screenshots/skills/mobile-onboarding.png" alt="mobile-onboarding" /></a><br/>
+<sub><b><a href="skills/mobile-onboarding/"><code>mobile-onboarding</code></a></b> · <i>prototype</i><br/>Three-frame mobile onboarding flow — splash, value-prop, sign-in. Status bar, swipe dots, primary CTA.</sub>
+</td>
+<td width="50%" valign="top">
+<a href="skills/motion-frames/"><img src="docs/screenshots/skills/motion-frames.png" alt="motion-frames" /></a><br/>
+<sub><b><a href="skills/motion-frames/"><code>motion-frames</code></a></b> · <i>prototype</i><br/>Single-frame motion-design hero with looping CSS animations — rotating type ring, animated globe, ticking timer. Hand-off ready for HyperFrames.</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<a href="skills/social-carousel/"><img src="docs/screenshots/skills/social-carousel.png" alt="social-carousel" /></a><br/>
+<sub><b><a href="skills/social-carousel/"><code>social-carousel</code></a></b> · <i>prototype</i><br/>Three-card 1080×1080 social-media carousel — cinematic panels with display headlines that connect across the series, brand mark, loop affordance.</sub>
+</td>
+<td width="50%" valign="top">
+<a href="skills/sprite-animation/"><img src="docs/screenshots/skills/sprite-animation.png" alt="sprite-animation" /></a><br/>
+<sub><b><a href="skills/sprite-animation/"><code>sprite-animation</code></a></b> · <i>prototype</i><br/>Pixel / 8-bit animated explainer slide — full-bleed cream stage, animated pixel mascot, kinetic Japanese display type, looping CSS keyframes.</sub>
+</td>
+</tr>
+</table>
+
+### Design surfaces
+
+| Skill | Mode | Default for | What it produces |
+|---|---|---|---|
+| [`web-prototype`](skills/web-prototype/) | prototype | desktop | Single-page HTML — landings, marketing, hero pages |
+| [`saas-landing`](skills/saas-landing/) | prototype | desktop | Hero / features / pricing / CTA marketing layout |
+| [`dashboard`](skills/dashboard/) | prototype | desktop | Admin / analytics with sidebar + data dense layout |
+| [`pricing-page`](skills/pricing-page/) | prototype | desktop | Standalone pricing + comparison tables |
+| [`docs-page`](skills/docs-page/) | prototype | desktop | 3-column documentation layout |
+| [`blog-post`](skills/blog-post/) | prototype | desktop | Editorial long-form |
+| [`mobile-app`](skills/mobile-app/) | prototype | mobile | iPhone 15 Pro / Pixel framed app screen(s) |
+| [`simple-deck`](skills/simple-deck/) | deck | desktop | Minimal horizontal-swipe deck |
+| [`guizang-ppt`](skills/guizang-ppt/) | deck | **default** for deck | Magazine-style web PPT — bundled from [op7418/guizang-ppt-skill][guizang] |
+
+### Document / work-product surfaces
+
+| Skill | Mode | What it produces |
+|---|---|---|
+| [`pm-spec`](skills/pm-spec/) | template | PM specification doc with TOC + decision log |
+| [`weekly-update`](skills/weekly-update/) | template | Team weekly with progress / blockers / next |
+| [`meeting-notes`](skills/meeting-notes/) | template | Meeting decision log |
+| [`eng-runbook`](skills/eng-runbook/) | template | Incident runbook |
+| [`finance-report`](skills/finance-report/) | template | Exec finance summary |
+| [`hr-onboarding`](skills/hr-onboarding/) | template | Role onboarding plan |
+| [`invoice`](skills/invoice/) | template | Single-page invoice |
+| [`kanban-board`](skills/kanban-board/) | template | Board snapshot |
+| [`team-okrs`](skills/team-okrs/) | template | OKR scoresheet |
+
+Adding a skill takes one folder. Read [`docs/skills-protocol.md`](docs/skills-protocol.md) for the extended frontmatter, fork an existing skill, restart the daemon, it appears in the picker.
 
 ## Six load-bearing ideas
 
@@ -320,59 +399,10 @@ open-design/
     └── artifacts/                 ← saved one-off renders
 ```
 
-## Skills
-
-19 skills ship in the box. Each is a folder under [`skills/`](skills/) following the Claude Code [`SKILL.md`][skill] convention with an extended `od:` frontmatter (`mode`, `platform`, `scenario`, `preview`, `design_system`).
-
-### Showcase examples
-
-The visually distinctive skills you'll most likely run first. Each ships a real `example.html` you can open straight from the repo to see what the agent will produce.
-
-| Skill | Mode | What it produces |
-|---|---|---|
-| [`dating-web`](skills/dating-web/) | prototype | Consumer dating / matchmaking dashboard — left rail nav, ticker bar, KPIs, 30-day mutual-matches chart, editorial typography |
-| [`digital-eguide`](skills/digital-eguide/) | template | Two-spread digital e-guide — cover (title, author, TOC teaser) + lesson spread with pull-quote and step list. Creator / lifestyle tone |
-| [`email-marketing`](skills/email-marketing/) | prototype | Brand product-launch HTML email — masthead, hero image, headline lockup, CTA, specs grid. Centered single-column, table-fallback safe |
-| [`gamified-app`](skills/gamified-app/) | prototype | Three-frame gamified mobile-app prototype on a dark showcase stage — cover, today's quests with XP ribbons + level bar, quest detail |
-| [`mobile-onboarding`](skills/mobile-onboarding/) | prototype | Three-frame mobile onboarding flow — splash, value-prop, sign-in. Status bar, swipe dots, primary CTA |
-| [`motion-frames`](skills/motion-frames/) | prototype | Single-frame motion-design hero with looping CSS animations — rotating type ring, animated globe, ticking timer. Hand-off ready for HyperFrames |
-| [`social-carousel`](skills/social-carousel/) | prototype | Three-card 1080×1080 social-media carousel — cinematic panels with display headlines that connect across the series, brand mark, loop affordance |
-| [`sprite-animation`](skills/sprite-animation/) | prototype | Pixel / 8-bit animated explainer slide — full-bleed cream stage, animated pixel mascot, kinetic Japanese display type, looping CSS keyframes |
-
-### Design surfaces
-
-| Skill | Mode | Default for | What it produces |
-|---|---|---|---|
-| [`web-prototype`](skills/web-prototype/) | prototype | desktop | Single-page HTML — landings, marketing, hero pages |
-| [`saas-landing`](skills/saas-landing/) | prototype | desktop | Hero / features / pricing / CTA marketing layout |
-| [`dashboard`](skills/dashboard/) | prototype | desktop | Admin / analytics with sidebar + data dense layout |
-| [`pricing-page`](skills/pricing-page/) | prototype | desktop | Standalone pricing + comparison tables |
-| [`docs-page`](skills/docs-page/) | prototype | desktop | 3-column documentation layout |
-| [`blog-post`](skills/blog-post/) | prototype | desktop | Editorial long-form |
-| [`mobile-app`](skills/mobile-app/) | prototype | mobile | iPhone 15 Pro / Pixel framed app screen(s) |
-| [`simple-deck`](skills/simple-deck/) | deck | desktop | Minimal horizontal-swipe deck |
-| [`guizang-ppt`](skills/guizang-ppt/) | deck | **default** for deck | Magazine-style web PPT — bundled from [op7418/guizang-ppt-skill][guizang] |
-
-### Document / work-product surfaces
-
-| Skill | Mode | What it produces |
-|---|---|---|
-| [`pm-spec`](skills/pm-spec/) | template | PM specification doc with TOC + decision log |
-| [`weekly-update`](skills/weekly-update/) | template | Team weekly with progress / blockers / next |
-| [`meeting-notes`](skills/meeting-notes/) | template | Meeting decision log |
-| [`eng-runbook`](skills/eng-runbook/) | template | Incident runbook |
-| [`finance-report`](skills/finance-report/) | template | Exec finance summary |
-| [`hr-onboarding`](skills/hr-onboarding/) | template | Role onboarding plan |
-| [`invoice`](skills/invoice/) | template | Single-page invoice |
-| [`kanban-board`](skills/kanban-board/) | template | Board snapshot |
-| [`team-okrs`](skills/team-okrs/) | template | OKR scoresheet |
-
-Adding a skill takes one folder. Read [`docs/skills-protocol.md`](docs/skills-protocol.md) for the extended frontmatter, fork an existing skill, restart the daemon, it appears in the picker.
-
 ## Design Systems
 
 <p align="center">
-  <img src="docs/assets/design-systems-library.svg" alt="71 design systems library — placeholder, replace with the real screenshot" width="100%" />
+  <img src="docs/assets/design-systems-library.png" alt="The 71 design systems library — style guide spread" width="100%" />
 </p>
 
 71 systems out of the box, each as a single [`DESIGN.md`](design-systems/README.md):
@@ -450,7 +480,7 @@ The whole machinery below is the [`huashu-design`](https://github.com/alchaincyf
 | PPT skill reuse | N/A | Built-in | **[`guizang-ppt-skill`][guizang] drops in** |
 | Minimum billing | Pro / Max / Team | BYOK | **BYOK** |
 
-[cd]: https://www.anthropic.com/news/claude-design
+[cd]: https://x.com/claudeai/status/2045156267690213649
 [ocod]: https://github.com/OpenCoworkAI/open-codesign
 [piai]: https://github.com/mariozechner/pi-ai
 [acd]: https://github.com/VoltAgent/awesome-claude-design
@@ -479,7 +509,7 @@ Every external project this repo borrows from. Each link goes to the source so y
 
 | Project | Role here |
 |---|---|
-| [`Claude Design`][cd] | The closed product this repo provides an open substrate for. |
+| [`Claude Design`][cd] | The closed-source product this repo is the open-source alternative to. |
 | [**`alchaincyf/huashu-design`**](https://github.com/alchaincyf/huashu-design) | The design-philosophy core. Junior-Designer workflow, the 5-step brand-asset protocol, anti-AI-slop checklist, 5-dimensional self-critique, and the "5 schools × 20 design philosophies" library behind our direction picker — all distilled into [`src/prompts/discovery.ts`](src/prompts/discovery.ts) and [`src/prompts/directions.ts`](src/prompts/directions.ts). |
 | [**`op7418/guizang-ppt-skill`**][guizang] | Magazine-web-PPT skill bundled verbatim under [`skills/guizang-ppt/`](skills/guizang-ppt/) with original LICENSE preserved. Default for deck mode. P0/P1/P2 checklist culture borrowed for every other skill. |
 | [**`multica-ai/multica`**](https://github.com/multica-ai/multica) | The daemon + adapter architecture. PATH-scan agent detection, local daemon as the only privileged process, agent-as-teammate worldview. We adopt the model; we do not vendor the code. |
@@ -508,7 +538,15 @@ Phased delivery → [`docs/roadmap.md`](docs/roadmap.md).
 
 This is an early implementation — the closed loop (detect → pick skill + design system → chat → parse `<artifact>` → preview → save) runs end-to-end. The prompt stack and skill library are where most of the value lives, and they're stable. The component-level UI is shipping daily.
 
-Issues, PRs, new skills, and new design systems are all welcome.
+## Contributing
+
+Issues, PRs, new skills, and new design systems are all welcome. The highest-leverage contributions are usually one folder, one Markdown file, or one PR-sized adapter:
+
+- **Add a skill** — drop a folder into [`skills/`](skills/) following the [`SKILL.md`][skill] convention.
+- **Add a design system** — drop a `DESIGN.md` into [`design-systems/<brand>/`](design-systems/) using the 9-section schema.
+- **Wire up a new coding-agent CLI** — one entry in [`daemon/agents.js`](daemon/agents.js).
+
+Full walkthrough, bar-for-merging, code style, and what we don't accept → [`CONTRIBUTING.md`](CONTRIBUTING.md) ([简体中文](CONTRIBUTING.zh-CN.md)).
 
 ## License
 

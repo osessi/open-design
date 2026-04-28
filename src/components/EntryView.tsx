@@ -5,6 +5,8 @@ import type {
   AppConfig,
   DesignSystemSummary,
   Project,
+  ProjectKind,
+  ProjectMetadata,
   ProjectTemplate,
   SkillSummary,
 } from '../types';
@@ -15,7 +17,7 @@ import { ExamplesTab } from './ExamplesTab';
 import { Icon } from './Icon';
 import { LanguageMenu } from './LanguageMenu';
 import { CenteredLoader } from './Loading';
-import { NewProjectPanel, type CreateInput, type CreateTab } from './NewProjectPanel';
+import { NewProjectPanel, type CreateInput } from './NewProjectPanel';
 
 type TopTab = 'designs' | 'examples' | 'design-systems';
 
@@ -70,13 +72,6 @@ export function EntryView({
   const t = useT();
   const [topTab, setTopTab] = useState<TopTab>('designs');
   const [previewSystemId, setPreviewSystemId] = useState<string | null>(null);
-  const [panelPreset, setPanelPreset] = useState<{
-    tab: CreateTab;
-    skillId: string | null;
-    name: string;
-    pendingPrompt?: string;
-    nonce: number;
-  } | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => loadSidebarWidth());
   const [resizing, setResizing] = useState(false);
 
@@ -98,13 +93,16 @@ export function EntryView({
       : t('settings.noAgentSelected');
   }, [config.mode, config.model, config.baseUrl, currentAgent, t]);
 
+  // 'Use this prompt' on an example card is a fast path — skip the form and
+  // create the project immediately with sane defaults derived from the skill,
+  // seeding the chat composer with the example prompt via pendingPrompt.
   function usePromptFromSkill(skill: SkillSummary) {
-    setPanelPreset({
-      tab: tabForSkill(skill),
-      skillId: skill.id,
+    onCreateProject({
       name: skill.name,
+      skillId: skill.id,
+      designSystemId: null,
+      metadata: metadataForSkill(skill),
       pendingPrompt: skill.examplePrompt || skill.description,
-      nonce: Date.now(),
     });
   }
 
@@ -118,10 +116,7 @@ export function EntryView({
   );
 
   function handleCreate(input: CreateInput) {
-    onCreateProject({
-      ...input,
-      pendingPrompt: panelPreset?.pendingPrompt,
-    });
+    onCreateProject(input);
   }
 
   const startWidthRef = useRef(0);
@@ -177,15 +172,11 @@ export function EntryView({
           </div>
         </div>
         <NewProjectPanel
-          key={panelPreset?.nonce ?? 'default'}
           skills={skills}
           designSystems={designSystems}
           defaultDesignSystemId={defaultDesignSystemId}
           templates={templates}
           onCreate={handleCreate}
-          presetTab={panelPreset?.tab}
-          presetSkillId={panelPreset?.skillId ?? null}
-          presetName={panelPreset?.name}
           loading={loading}
         />
         <div className="entry-side-foot">
@@ -313,8 +304,38 @@ function TopTabButton({
   );
 }
 
-function tabForSkill(skill: SkillSummary): CreateTab {
+// Map a skill's declared mode to project metadata. Falls back to the same
+// defaults the new-project form would apply (high-fidelity prototype, no
+// speaker notes on decks, no template animations) so 'Use this prompt'
+// produces a project indistinguishable from one created via the form. Per-
+// skill hints in SKILL.md frontmatter (od.fidelity, od.speaker_notes,
+// od.animations) override the defaults so each example reproduces the
+// shipped example.html — e.g. wireframe-sketch declares fidelity:wireframe.
+function metadataForSkill(skill: SkillSummary): ProjectMetadata {
+  const kind = kindForSkill(skill);
+  if (kind === 'prototype') {
+    return { kind, fidelity: skill.fidelity ?? 'high-fidelity' };
+  }
+  if (kind === 'deck') {
+    return {
+      kind,
+      speakerNotes:
+        typeof skill.speakerNotes === 'boolean' ? skill.speakerNotes : false,
+    };
+  }
+  if (kind === 'template') {
+    return {
+      kind,
+      animations:
+        typeof skill.animations === 'boolean' ? skill.animations : false,
+    };
+  }
+  return { kind: 'other' };
+}
+
+function kindForSkill(skill: SkillSummary): ProjectKind {
   if (skill.mode === 'deck') return 'deck';
   if (skill.mode === 'prototype') return 'prototype';
-  return 'template';
+  if (skill.mode === 'template') return 'template';
+  return 'other';
 }

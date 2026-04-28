@@ -21,6 +21,7 @@ od:
   mode: prototype
   platform: desktop
   scenario: design
+  fidelity: wireframe
   preview:
     type: html
     entry: index.html

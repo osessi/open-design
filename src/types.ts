@@ -88,6 +88,15 @@ export interface SkillSummary {
    *  the skill in its natural alphabetical position below all featured
    *  entries. Set via `od.featured` in the SKILL.md frontmatter. */
   featured?: number | null;
+  /** Optional metadata hints, parsed from `od.fidelity`,
+   *  `od.speaker_notes`, and `od.animations` in SKILL.md. Used by the
+   *  Examples gallery's "Use this prompt" fast-create path to mirror the
+   *  shipped `example.html` (e.g. wireframe-sketch declares
+   *  `fidelity: wireframe`). Missing hints fall back to the same defaults
+   *  the new-project form would apply. */
+  fidelity?: 'wireframe' | 'high-fidelity' | null;
+  speakerNotes?: boolean | null;
+  animations?: boolean | null;
   hasBody: boolean;
   examplePrompt: string;
 }

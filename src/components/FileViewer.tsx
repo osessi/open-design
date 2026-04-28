@@ -141,13 +141,23 @@ function HtmlViewer({
     };
   }, [projectId, file.name, file.mtime, liveHtml, reloadKey]);
 
+  // Detect deck-shaped HTML even when the project's skill didn't declare
+  // `mode: deck`. Freeform projects often produce a deck because the user
+  // asked for one in plain prose; without this, prev/next and Present
+  // never surface and the deck becomes a static, unnavigable preview.
+  const looksLikeDeck = useMemo(() => {
+    if (!source) return false;
+    return /class\s*=\s*['"][^'"]*\bslide\b/i.test(source);
+  }, [source]);
+  const effectiveDeck = isDeck || looksLikeDeck;
+
   const srcDoc = useMemo(
-    () => (source ? buildSrcdoc(source, { deck: isDeck }) : ''),
-    [source, isDeck],
+    () => (source ? buildSrcdoc(source, { deck: effectiveDeck }) : ''),
+    [source, effectiveDeck],
   );
 
   useEffect(() => {
-    if (!isDeck) {
+    if (!effectiveDeck) {
       setSlideState(null);
       return;
     }
@@ -161,7 +171,7 @@ function HtmlViewer({
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [isDeck]);
+  }, [effectiveDeck]);
 
   function postSlide(action: 'next' | 'prev' | 'first' | 'last') {
     const win = iframeRef.current?.contentWindow;
@@ -172,7 +182,7 @@ function HtmlViewer({
   // Keyboard nav on the host, so the user can press ←/→ even when focus
   // is on the chat composer or any other host control.
   useEffect(() => {
-    if (!isDeck || mode !== 'preview') return;
+    if (!effectiveDeck || mode !== 'preview') return;
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
       if (target) {
@@ -195,7 +205,7 @@ function HtmlViewer({
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isDeck, mode]);
+  }, [effectiveDeck, mode]);
 
   useEffect(() => {
     if (!presentMenuOpen) return;
@@ -309,7 +319,7 @@ function HtmlViewer({
     setZoom((z) => Math.max(25, Math.min(200, z + delta)));
   }
 
-  const showPresent = isDeck && source !== null;
+  const showPresent = effectiveDeck && source !== null;
   const canShare = source !== null;
   const exportTitle = file.name.replace(/\.html?$/i, '') || file.name;
   const canPptx = canShare && Boolean(onExportAsPptx) && !streaming;
@@ -328,7 +338,7 @@ function HtmlViewer({
           >
             <Icon name="reload" size={14} />
           </button>
-          {isDeck ? (
+          {effectiveDeck ? (
             <span
               className="deck-nav"
               role="group"
@@ -502,12 +512,12 @@ function HtmlViewer({
                     role="menuitem"
                     onClick={() => {
                       setShareMenuOpen(false);
-                      exportAsPdf(source ?? '', exportTitle, { deck: isDeck });
+                      exportAsPdf(source ?? '', exportTitle, { deck: effectiveDeck });
                     }}
                   >
                     <span className="share-menu-icon"><Icon name="file" size={14} /></span>
                     <span>
-                      {isDeck
+                      {effectiveDeck
                         ? t('fileViewer.exportPdfAllSlides')
                         : t('fileViewer.exportPdf')}
                     </span>

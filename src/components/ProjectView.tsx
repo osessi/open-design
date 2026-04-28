@@ -666,9 +666,22 @@ export function ProjectView({
     [skills, project.skillId],
   );
 
-  // Hand the pending prompt to ChatPane exactly once. After the first render
-  // we tell App to clear it so re-entering the project later doesn't reseed.
-  const initialDraft = project.pendingPrompt;
+  // Hand the pending prompt to ChatPane exactly once. We snapshot the value
+  // into local state on mount so it survives the ChatPane remount triggered
+  // when `activeConversationId` resolves from `null` to a real id (the
+  // `key={activeConversationId}` on ChatPane otherwise wipes the freshly
+  // seeded composer draft). Once the conversation id is in place — meaning
+  // ChatPane has remounted with the seed still available — we clear both
+  // the local snapshot and the persisted pendingPrompt so future
+  // conversation switches don't keep re-seeding the composer.
+  const [initialDraft, setInitialDraft] = useState<string | undefined>(
+    project.pendingPrompt,
+  );
+  useEffect(() => {
+    if (initialDraft && activeConversationId) {
+      setInitialDraft(undefined);
+    }
+  }, [initialDraft, activeConversationId]);
   useEffect(() => {
     if (project.pendingPrompt) onClearPendingPrompt();
   }, [project.pendingPrompt, onClearPendingPrompt]);

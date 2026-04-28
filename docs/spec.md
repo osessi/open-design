@@ -3,7 +3,7 @@
 **Status:** Draft v0.1 · 2026-04-24
 **Scope:** Product definition, scenarios, non-goals, high-level modules, and positioning against both [Anthropic's Claude Design][cd] and the existing open-source alternative ([Open CoDesign][ocod]).
 
-[cd]: https://www.anthropic.com/news/claude-design
+[cd]: https://x.com/claudeai/status/2045156267690213649
 [ocod]: https://github.com/OpenCoworkAI/open-codesign
 [guizang]: https://github.com/op7418/guizang-ppt-skill
 [multica]: https://github.com/multica-ai/multica

@@ -11,7 +11,7 @@ Every external project this spec leans on. Three questions per entry: what is it
 ### [Anthropic Claude Design][cd]
 - **URL:** [claude.ai/design][cd] · [release announcement](https://www.infoq.cn/article/TH0QVHpvVGZ7VP3hAEmm) · [ifanr review](https://www.ifanr.com/1662860)
 
-[cd]: https://www.anthropic.com/news/claude-design
+[cd]: https://x.com/claudeai/status/2045156267690213649
 - **What it is:** Anthropic's closed-source AI design product. Released 2026-04-17. Powered by Opus 4.7. Web-only (claude.ai). Generates prototypes, wireframes, decks, marketing pages, complex prototypes with voice/video/3D/shaders.
 - **Why it matters to us:** Defines the category. Its viral moment (~60M X impressions week 1) proves the market.
 - **What we borrow:** The high-level value prop — "natural language → editable visual design." Feature inspiration for modes (prototype, deck, marketing). UI ideas around inline editing and custom sliders.

@@ -28,9 +28,6 @@ interface Props {
   defaultDesignSystemId: string | null;
   templates: ProjectTemplate[];
   onCreate: (input: CreateInput) => void;
-  presetTab?: CreateTab;
-  presetSkillId?: string | null;
-  presetName?: string;
   loading?: boolean;
 }
 
@@ -47,14 +44,11 @@ export function NewProjectPanel({
   defaultDesignSystemId,
   templates,
   onCreate,
-  presetTab,
-  presetSkillId,
-  presetName,
   loading = false,
 }: Props) {
   const t = useT();
-  const [tab, setTab] = useState<CreateTab>(presetTab ?? 'prototype');
-  const [name, setName] = useState(presetName ?? '');
+  const [tab, setTab] = useState<CreateTab>('prototype');
+  const [name, setName] = useState('');
   // Design-system selection is now an *array* internally so the same
   // component can drive both single-select and multi-select modes without
   // duplicating state. Single-select coerces to length 0/1.
@@ -89,7 +83,6 @@ export function NewProjectPanel({
   // pick a default-rendered skill (so the agent gets the right SKILL.md
   // body) without requiring the user to choose one explicitly.
   const skillIdForTab = useMemo(() => {
-    if (presetSkillId !== undefined) return presetSkillId;
     if (tab === 'other') return null;
     if (tab === 'prototype') {
       const list = skills.filter((s) => s.mode === 'prototype');
@@ -104,7 +97,7 @@ export function NewProjectPanel({
         ?? null;
     }
     return null;
-  }, [tab, skills, presetSkillId]);
+  }, [tab, skills]);
 
   const canCreate =
     !loading && (tab !== 'template' || templateId != null);

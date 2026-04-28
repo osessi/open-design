@@ -76,8 +76,12 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(
     const importTriggerRef = useRef<HTMLButtonElement | null>(null);
     // initialDraft is only honored on the first non-empty value the parent
     // hands us. After we seed once, the composer is fully under user control
-    // — re-renders that pass the same prompt back must not reseed.
-    const seededRef = useRef(false);
+    // — re-renders that pass the same prompt back must not reseed. If the
+    // initial useState above already consumed a non-empty initialDraft we
+    // mark it seeded immediately, so an early clear by the user (typing or
+    // backspace before the parent stops passing initialDraft) does not get
+    // overwritten by the effect.
+    const seededRef = useRef(Boolean(initialDraft));
 
     useEffect(() => {
       if (seededRef.current) return;
