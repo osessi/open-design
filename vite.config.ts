@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 const DAEMON_PORT = Number(process.env.OD_PORT) || 7456;
@@ -6,6 +6,10 @@ const VITE_PORT = Number(process.env.VITE_PORT) || 5173;
 
 export default defineConfig({
   plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
+  },
   server: {
     port: VITE_PORT,
     proxy: {
