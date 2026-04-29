@@ -35,7 +35,7 @@ describe('todo event helpers', () => {
     ]);
   });
 
-  it('uses the latest non-empty TodoWrite event as the current todo truth', () => {
+  it('uses the latest TodoWrite event as the current todo truth', () => {
     const events: AgentEvent[] = [
       { kind: 'tool_use', id: 'todo-1', name: 'TodoWrite', input: firstTodoInput },
       { kind: 'text', text: 'Working...' },
@@ -51,6 +51,17 @@ describe('todo event helpers', () => {
     expect(latestTodosFromEvents(events)).toEqual([
       { content: 'Final polish', status: 'pending', activeForm: undefined },
     ]);
+  });
+
+  it('treats an empty latest TodoWrite event as authoritative', () => {
+    const events: AgentEvent[] = [
+      { kind: 'tool_use', id: 'todo-1', name: 'TodoWrite', input: firstTodoInput },
+      { kind: 'text', text: 'All done.' },
+      { kind: 'tool_use', id: 'todo-empty', name: 'TodoWrite', input: { todos: [] } },
+    ];
+
+    expect(latestTodosFromEvents(events)).toEqual([]);
+    expect(unfinishedTodosFromEvents(events)).toEqual([]);
   });
 
   it('returns only pending and in-progress todos as unfinished', () => {

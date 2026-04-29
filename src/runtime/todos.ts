@@ -36,8 +36,7 @@ export function latestTodosFromEvents(events: AgentEvent[] | undefined): TodoIte
   for (let i = events.length - 1; i >= 0; i -= 1) {
     const event = events[i];
     if (event?.kind !== 'tool_use' || event.name !== 'TodoWrite') continue;
-    const todos = parseTodoWriteInput(event.input);
-    if (todos.length > 0) return todos;
+    return parseTodoWriteInput(event.input);
   }
   return [];
 }
