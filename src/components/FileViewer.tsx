@@ -892,6 +892,7 @@ function humanSize(bytes: number): string {
 }
 
 function documentMetaLabel(file: ProjectFile, t: TranslateFn): string {
+  if (file.kind === 'pdf') return t('fileViewer.pdfMeta');
   if (file.kind === 'document') return t('fileViewer.documentMeta');
   if (file.kind === 'presentation') return t('fileViewer.presentationMeta');
   if (file.kind === 'spreadsheet') return t('fileViewer.spreadsheetMeta');

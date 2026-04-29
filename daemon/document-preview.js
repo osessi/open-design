@@ -1,10 +1,17 @@
 import { execFile } from 'node:child_process';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import JSZip from 'jszip';
 import { kindFor } from './projects.js';
 
 const execFileP = promisify(execFile);
+const MAX_COMPRESSED_PREVIEW_BYTES = 10 * 1024 * 1024;
+const MAX_UNCOMPRESSED_PREVIEW_BYTES = 50 * 1024 * 1024;
+const MAX_XML_ENTRY_BYTES = 5 * 1024 * 1024;
+const MAX_PDF_PREVIEW_CONCURRENCY = 2;
+const pdfPreviewQueue = createLimiter(MAX_PDF_PREVIEW_CONCURRENCY);
 
 export async function buildDocumentPreview(file) {
   const kind = kindFor(file.name);
@@ -18,11 +25,13 @@ export async function buildDocumentPreview(file) {
     return {
       kind,
       title: path.basename(file.name),
-      sections: await previewPdf(file.buffer),
+      sections: await pdfPreviewQueue(() => previewPdf(file.buffer)),
     };
   }
 
+  assertPreviewInputSize(file.buffer.length);
   const zip = await JSZip.loadAsync(file.buffer);
+  assertZipPreviewSize(zip);
   if (kind === 'document') {
     return {
       kind,
@@ -45,13 +54,12 @@ export async function buildDocumentPreview(file) {
 }
 
 async function previewPdf(buffer) {
-  const tmp = await import('node:os').then(({ tmpdir }) =>
-    path.join(tmpdir(), `od-preview-${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`),
-  );
-  const { writeFile, unlink } = await import('node:fs/promises');
-  await writeFile(tmp, buffer);
+  assertPreviewInputSize(buffer.length);
+  const tmpDir = await mkdtemp(path.join(tmpdir(), 'od-preview-'));
+  const tmpFile = path.join(tmpDir, 'input.pdf');
+  await writeFile(tmpFile, buffer, { flag: 'wx' });
   try {
-    const { stdout } = await execFileP('pdftotext', ['-layout', tmp, '-'], {
+    const { stdout } = await execFileP('pdftotext', ['-layout', tmpFile, '-'], {
       timeout: 5000,
       maxBuffer: 2 * 1024 * 1024,
     });
@@ -73,7 +81,7 @@ async function previewPdf(buffer) {
       },
     ];
   } finally {
-    unlink(tmp).catch(() => {});
+    rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   }
 }
 
@@ -195,7 +203,15 @@ function extractTextRuns(xml) {
 async function readZipText(zip, name) {
   const entry = zip.file(name);
   if (!entry) throw new Error(`missing ${name}`);
-  return entry.async('text');
+  const size = entry._data?.uncompressedSize ?? 0;
+  if (size > MAX_XML_ENTRY_BYTES) {
+    const err = new Error('document section too large to preview');
+    err.statusCode = 413;
+    throw err;
+  }
+  const xml = await entry.async('text');
+  assertSafeXml(xml);
+  return xml;
 }
 
 function parseAttrs(raw) {
@@ -218,6 +234,56 @@ function decodeXml(raw) {
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
     .replace(/&amp;/g, '&');
+}
+
+function assertPreviewInputSize(size) {
+  if (size > MAX_COMPRESSED_PREVIEW_BYTES) {
+    const err = new Error('document too large to preview');
+    err.statusCode = 413;
+    throw err;
+  }
+}
+
+function assertZipPreviewSize(zip) {
+  let total = 0;
+  for (const entry of Object.values(zip.files)) {
+    total += entry._data?.uncompressedSize ?? 0;
+    if (total > MAX_UNCOMPRESSED_PREVIEW_BYTES) {
+      const err = new Error('document too large to preview');
+      err.statusCode = 413;
+      throw err;
+    }
+  }
+}
+
+function assertSafeXml(xml) {
+  if (/<!DOCTYPE\b|<!ENTITY\b/i.test(xml)) {
+    const err = new Error('unsupported XML entities');
+    err.statusCode = 415;
+    throw err;
+  }
+}
+
+function createLimiter(limit) {
+  let active = 0;
+  const pending = [];
+  const runNext = () => {
+    if (active >= limit || pending.length === 0) return;
+    active += 1;
+    const { task, resolve, reject } = pending.shift();
+    Promise.resolve()
+      .then(task)
+      .then(resolve, reject)
+      .finally(() => {
+        active -= 1;
+        runNext();
+      });
+  };
+  return (task) =>
+    new Promise((resolve, reject) => {
+      pending.push({ task, resolve, reject });
+      runNext();
+    });
 }
 
 function numericPathSort(a, b) {
