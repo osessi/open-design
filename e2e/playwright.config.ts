@@ -2,13 +2,14 @@ import { defineConfig, devices } from '@playwright/test';
 import { resolveDevPorts } from '../scripts/resolve-dev-ports.mjs';
 
 const desiredDaemonPort = Number(process.env.OD_PORT) || 17_456;
-const desiredVitePort = Number(process.env.VITE_PORT) || 17_573;
-const { daemonPort, vitePort } = await resolveDevPorts({
+const desiredNextPort = Number(process.env.NEXT_PORT) || 17_573;
+const { daemonPort, appPort: nextPort } = await resolveDevPorts({
   daemonStart: desiredDaemonPort,
-  viteStart: desiredVitePort,
+  appStart: desiredNextPort,
+  appLabel: 'next',
   searchRange: 200,
 });
-const baseURL = `http://127.0.0.1:${vitePort}`;
+const baseURL = `http://127.0.0.1:${nextPort}`;
 
 export default defineConfig({
   testDir: './specs',
@@ -43,7 +44,7 @@ export default defineConfig({
     command:
       `OD_DATA_DIR=e2e/.od-data ` +
       `OD_PORT=${daemonPort} OD_PORT_STRICT=1 ` +
-      `VITE_PORT=${vitePort} VITE_PORT_STRICT=1 npm run dev:all`,
+      `NEXT_PORT=${nextPort} NEXT_PORT_STRICT=1 npm run dev:all`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

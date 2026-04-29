@@ -1,5 +1,7 @@
-node_modules
-dist
+node_modules/
+dist/
+out/
+.next/
 .DS_Store
 *.log
 .vite
@@ -28,7 +30,11 @@ tsconfig.tsbuildinfo
 
 .claude-sessions/*
 
-.cursor/*
+.cursor/
+.agents/
+.opencode/
+.claude/
+.codex/
 
 # Commander task scratchpad; keep local task notes out of git by default.
 .task/

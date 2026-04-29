@@ -29,7 +29,8 @@ export async function findFreePort(
 
 export async function resolveDevPorts({
   daemonStart = 7456,
-  viteStart = 5173,
+  appStart = 5173,
+  appLabel = 'app',
   host = HOST,
   searchRange = DEFAULT_PORT_SEARCH_RANGE,
 } = {}) {
@@ -37,10 +38,10 @@ export async function resolveDevPorts({
     host,
     searchRange,
   });
-  const vitePort = await findFreePort(viteStart, 'vite', {
+  const appPort = await findFreePort(appStart, appLabel, {
     host,
     searchRange,
   });
 
-  return { daemonPort, vitePort };
+  return { daemonPort, appPort };
 }
