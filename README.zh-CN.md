@@ -22,7 +22,7 @@
 
 Anthropic 的 [Claude Design][cd]（2026-04-17 发布，基于 Opus 4.7）让大家第一次看到：当一个 LLM 不再写废话、开始直接交付设计成品，会是什么样子。它瞬间出圈 —— 然后保持**闭源**、付费、只跑在云上、绑定 Anthropic 的模型和 Anthropic 的内部 skill。没有 checkout，没有自托管，没有 Vercel 部署，也换不了自己的 agent。
 
-**Open Design（OD）就是它的开源替代品。** 同一套 loop、同一种「artifact-first」心智模型，但没有锁定。我们不做 agent —— 你笔记本上最强的 coding agent 已经装好了。我们要做的，是把它接进一个 skill 驱动的设计工作流：本地用 `pnpm dev:all` 跑完整 web + daemon，云端可单独部署 Web 层，每一层都 BYOK（自带 Key）。
+**Open Design（OD）就是它的开源替代品。** 同一套 loop、同一种「artifact-first」心智模型，但没有锁定。我们不做 agent —— 你笔记本上最强的 coding agent 已经装好了。我们要做的，是把它接进一个 skill 驱动的设计工作流：本地用 `pnpm tools-dev` 跑完整本地闭环，云端可单独部署 Web 层，每一层都 BYOK（自带 Key）。
 
 输入「帮我做一份杂志风的种子轮 pitch deck」。在模型挥洒第一个像素之前，**初始化问题表单**已经先跳出来。Agent 从 5 套精挑的视觉方向里选一个。一张活的 `TodoWrite` 计划卡片实时流入 UI。Daemon 在磁盘上构建出一个真实的项目目录，里面有 seed 模板、布局库、自检 checklist。Agent **强制 pre-flight** 读取它们，对自己的输出跑一轮**五维评审**，几秒后吐出一个 `<artifact>`，渲染在沙盒 iframe 里。
 
@@ -45,7 +45,7 @@ OD 站在四个开源项目的肩膀上：
 | **视觉方向** | 5 套精选流派（Editorial Monocle · Modern Minimal · Tech Utility · Brutalist · Soft Warm），每一套自带 OKLch 色板 + 字体栈 |
 | **设备外壳** | iPhone 15 Pro · Pixel · iPad Pro · MacBook · Browser Chrome —— 像素级精确，跨 skill 共享 |
 | **Agent 运行时** | 本地 daemon 在你的项目目录里 spawn CLI —— agent 拥有真实的 `Read` / `Write` / `Bash` / `WebFetch`，作用在真实磁盘上 |
-| **部署目标** | 本地 `pnpm dev:all` · Vercel Web 层 · 单进程生产 (`pnpm start`) |
+| **部署目标** | 本地 `pnpm tools-dev` · Vercel Web 层 |
 | **License** | Apache-2.0 |
 
 [acd2]: https://github.com/VoltAgent/awesome-design-md
@@ -262,8 +262,8 @@ cd open-design
 corepack enable
 corepack pnpm --version   # 应输出 10.33.2
 pnpm install
-pnpm dev:all         # daemon (:7456) + Next dev (:3000) 一起起
-open http://localhost:3000
+pnpm tools-dev run web
+# 打开 tools-dev 输出的 web URL
 ```
 
 环境要求：Node `~24`，pnpm `10.33.x`。`nvm` / `fnm` 只是可选辅助工具，不是项目必需步骤；如果使用它们，先执行 `nvm install 24 && nvm use 24` 或 `fnm install 24 && fnm use 24`，再运行 `pnpm install`。
@@ -291,7 +291,7 @@ Daemon 在仓库根下维护一个隐藏目录，里面所有内容都已 gitign
 | 想做什么 | 怎么做 |
 |---|---|
 | 看一眼里面有啥 | `ls -la .od && sqlite3 .od/app.sqlite '.tables'` |
-| 完全清空，从零再来 | 先停 daemon，再 `rm -rf .od`，然后重新 `pnpm dev:all` |
+| 完全清空，从零再来 | `pnpm tools-dev stop`，再 `rm -rf .od`，然后重新 `pnpm tools-dev run web` |
 | 换到别的位置 | 暂不支持 —— 路径是相对仓库根写死的 |
 
 完整文件地图、脚本、排错 → [`QUICKSTART.md`](QUICKSTART.md)。

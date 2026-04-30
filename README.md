@@ -22,7 +22,7 @@
 
 Anthropic's [Claude Design][cd] (released 2026-04-17, Opus 4.7) showed what happens when an LLM stops writing prose and starts shipping design artifacts. It went viral — and stayed closed-source, paid-only, cloud-only, locked to Anthropic's model and Anthropic's skills. There is no checkout, no self-host, no Vercel deploy, no swap-in-your-own-agent.
 
-**Open Design (OD) is the open-source alternative.** Same loop, same artifact-first mental model, none of the lock-in. We don't ship an agent — the strongest coding agents already live on your laptop. We wire them into a skill-driven design workflow that runs locally with `pnpm dev:all`, can deploy the web layer to Vercel, and stays BYOK at every layer.
+**Open Design (OD) is the open-source alternative.** Same loop, same artifact-first mental model, none of the lock-in. We don't ship an agent — the strongest coding agents already live on your laptop. We wire them into a skill-driven design workflow that runs locally with `pnpm tools-dev`, can deploy the web layer to Vercel, and stays BYOK at every layer.
 
 Type `make me a magazine-style pitch deck for our seed round`. The interactive question form pops up before the model improvises a single pixel. The agent picks one of five curated visual directions. A live `TodoWrite` plan streams into the UI. The daemon builds a real on-disk project folder with a seed template, layout library, and self-check checklist. The agent reads them — pre-flight enforced — runs a five-dimensional critique against its own output, and emits a single `<artifact>` that renders in a sandboxed iframe seconds later.
 
@@ -45,7 +45,7 @@ OD stands on four open-source shoulders:
 | **Visual directions** | 5 curated schools (Editorial Monocle · Modern Minimal · Tech Utility · Brutalist · Soft Warm) — each ships a deterministic OKLch palette + font stack |
 | **Device frames** | iPhone 15 Pro · Pixel · iPad Pro · MacBook · Browser Chrome — pixel-accurate, shared across screens |
 | **Agent runtime** | Local daemon spawns the CLI in your project folder — agent gets real `Read`, `Write`, `Bash`, `WebFetch` against a real on-disk environment |
-| **Deployable to** | Local (`pnpm dev:all`) · Vercel web layer · Single-process prod (`pnpm start`) |
+| **Deployable to** | Local (`pnpm tools-dev`) · Vercel web layer |
 | **License** | Apache-2.0 |
 
 [acd2]: https://github.com/VoltAgent/awesome-design-md
@@ -262,8 +262,8 @@ cd open-design
 corepack enable
 corepack pnpm --version   # should print 10.33.2
 pnpm install
-pnpm dev:all         # daemon (:7456) + Next dev (:3000)
-open http://localhost:3000
+pnpm tools-dev run web
+# open the web URL printed by tools-dev
 ```
 
 Environment requirements: Node `~24` and pnpm `10.33.x`. `nvm`/`fnm` are optional helpers only; if you use one, run `nvm install 24 && nvm use 24` or `fnm install 24 && fnm use 24` before `pnpm install`.
@@ -291,7 +291,7 @@ The daemon owns one hidden folder at the repo root. Everything in it is gitignor
 | Want to… | Do this |
 |---|---|
 | Inspect what's in there | `ls -la .od && sqlite3 .od/app.sqlite '.tables'` |
-| Reset to a clean slate | stop the daemon, `rm -rf .od`, run `pnpm dev:all` again |
+| Reset to a clean slate | `pnpm tools-dev stop`, `rm -rf .od`, run `pnpm tools-dev run web` again |
 | Move it elsewhere | not supported yet — the path is hard-coded relative to the repo |
 
 Full file map, scripts, and troubleshooting → [`QUICKSTART.md`](QUICKSTART.md).

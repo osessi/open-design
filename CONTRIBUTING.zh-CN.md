@@ -31,7 +31,7 @@ git clone https://github.com/nexu-io/open-design.git
 cd open-design
 corepack enable           # 使用 packageManager 固定的 pnpm
 pnpm install
-pnpm dev:all              # daemon (:7456) + Next dev (:3000)
+pnpm tools-dev run web    # daemon + web 前台闭环
 pnpm typecheck            # tsc -b --noEmit
 pnpm build                # 生产构建
 ```
@@ -225,7 +225,7 @@ design-systems/your-brand/
 
 开 issue 时请带上：
 
-- 你跑的命令（精确到 `pnpm dev:all` / `pnpm start`）。
+- 你跑的命令（精确到 `pnpm tools-dev ...`）。
 - 选中的 agent CLI 是哪个（或者你走的是 BYOK 路径）。
 - 触发问题时的 skill + design system 组合。
 - 相关的 **daemon stderr 末尾几行** —— 大多数「artifact 没渲染出来」的报告，看到 `spawn ENOENT` 或 CLI 实际报错后 30 秒就能定位。

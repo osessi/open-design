@@ -31,7 +31,7 @@ OD is a web app plus a local daemon. The split means the same UI can run in thre
 └────────────────────────────────────────────────────┘
 ```
 
-One `pnpm dev:all` starts both the Next.js app and the daemon. Zero config. No accounts.
+One `pnpm tools-dev run web` starts both the Next.js app and the daemon. `pnpm tools-dev` adds the desktop shell. Zero config. No accounts.
 
 ### Topology B — Web on Vercel + daemon on user's machine
 
@@ -276,7 +276,7 @@ Full schema in [`schemas/protocol.md`](schemas/protocol.md) (TODO: write).
 ### Local
 ```sh
 pnpm install
-pnpm dev:all       # starts daemon on :7456, next on :3000
+pnpm tools-dev run web       # starts daemon + web foreground loop
 ```
 
 ### Docker

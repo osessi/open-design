@@ -31,7 +31,7 @@ git clone https://github.com/nexu-io/open-design.git
 cd open-design
 corepack enable           # selects the pinned pnpm from packageManager
 pnpm install
-pnpm dev:all              # daemon (:7456) + Next dev (:3000)
+pnpm tools-dev run web    # daemon + web foreground loop
 pnpm typecheck            # tsc -b --noEmit
 pnpm build                # production build
 ```
@@ -226,7 +226,7 @@ We don't enforce a CLA. Apache-2.0 covers us; your contribution is licensed unde
 
 Open an issue with:
 
-- What you ran (the exact `pnpm dev:all` / `pnpm start` invocation).
+- What you ran (the exact `pnpm tools-dev ...` invocation).
 - Which agent CLI was selected (or whether you were on the BYOK path).
 - The skill + design system pair that triggered it.
 - The relevant **daemon stderr tail** — most "the artifact never rendered" reports get diagnosed in 30 seconds when we can see `spawn ENOENT` or the CLI's actual error.

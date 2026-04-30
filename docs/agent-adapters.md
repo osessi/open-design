@@ -222,7 +222,7 @@ The user explicitly opts in to fallback — we don't silently switch, because a 
 First run:
 
 ```
-$ pnpm dev:all
+$ pnpm tools-dev run web
 [od] daemon starting on :7456
 [od] detecting agents…
 [od]   ✓ claude-code v0.6.3 (auth: ok, skills dir linked)

@@ -33,8 +33,8 @@ corepack pnpm --version   # should print 10.33.2
 ```bash
 corepack enable
 pnpm install
-pnpm dev:all           # starts daemon (:7456) + Next dev (:3000) together
-open http://localhost:3000
+pnpm tools-dev run web # starts daemon + web in the foreground
+# open the web URL printed by tools-dev
 ```
 
 On first load, the app detects your installed code-agent CLI (Claude Code / Codex / Gemini / OpenCode / Cursor Agent / Qwen), picks it automatically, and defaults to `web-prototype` skill + `Neutral Modern` design system. Type a prompt and hit **Send**. The agent streams into the left pane; the `<artifact>` tag is parsed out and the HTML renders live on the right. When it finishes, click **Save to disk** to persist the artifact under `./.od/artifacts/<timestamp>-<slug>/index.html`.
@@ -51,19 +51,19 @@ Pair a skill with a design system and a single prompt produces a layout-appropri
 ## Other scripts
 
 ```bash
-pnpm daemon            # just the daemon (no web UI build)
-pnpm dev               # just Next.js dev server on :3000
-pnpm build             # production build + static export to apps/web/out/
-pnpm preview           # build, then serve apps/web/out/ through the daemon locally
-pnpm start             # build + daemon serving apps/web/out/ (single-process prod mode)
-pnpm typecheck         # tsc -b --noEmit
+pnpm tools-dev                 # daemon + web + desktop in the background
+pnpm tools-dev start web       # daemon + web in the background
+pnpm tools-dev run web         # daemon + web in the foreground (e2e/dev server)
+pnpm tools-dev status          # inspect managed runtimes
+pnpm tools-dev logs            # show daemon/web/desktop logs
+pnpm tools-dev stop            # stop managed runtimes
+pnpm build                     # production build + static export to apps/web/out/
+pnpm typecheck                 # workspace typecheck
 ```
 
-Root scripts are orchestration only. App-specific commands live in workspace packages (`apps/web`, `apps/daemon`, and `e2e`), but the root aliases above are the normal entry points.
+`pnpm tools-dev` is the only local lifecycle entry point. Do not use the removed legacy root aliases (`pnpm dev`, `pnpm dev:all`, `pnpm daemon`, `pnpm preview`, `pnpm start`).
 
-For the daemon-only production mode, the daemon serves the static Next.js export itself at `http://localhost:7456`, so no reverse proxy is involved.
-
-During local development, `apps/web/next.config.ts` rewrites `/api/*`, `/artifacts/*`, and `/frames/*` to the daemon port so the App Router app can talk to the sibling Express process without CORS setup.
+During local development, `tools-dev` starts the daemon first, passes its port into `apps/web`, and `apps/web/next.config.ts` rewrites `/api/*`, `/artifacts/*`, and `/frames/*` to that daemon port so the App Router app can talk to the sibling Express process without CORS setup.
 
 ## Two execution modes
 
