@@ -4,6 +4,9 @@ import type { Dict } from '../i18n/types';
 type TranslateFn = (key: keyof Dict, vars?: Record<string, string | number>) => string;
 
 export function messageTime(message: ChatMessage): number | undefined {
+  if (message.role === 'assistant') {
+    return message.startedAt ?? message.createdAt ?? message.endedAt;
+  }
   return message.createdAt ?? message.startedAt ?? message.endedAt;
 }
 
