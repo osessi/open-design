@@ -42,6 +42,15 @@ export const DeckHtmlRenderer: ArtifactRenderer = {
   },
 };
 
+export const ReactComponentRenderer: ArtifactRenderer = {
+  id: 'react-component',
+  canRender: ({ file }) => {
+    const manifest = resolveManifest(file);
+    if (!manifest) return false;
+    return manifest.kind === 'react-component' || manifest.renderer === 'react-component';
+  },
+};
+
 export class RendererRegistry {
   constructor(private readonly renderers: ArtifactRenderer[]) {}
 
@@ -55,6 +64,7 @@ export class RendererRegistry {
 }
 
 export const artifactRendererRegistry = new RendererRegistry([
+  ReactComponentRenderer,
   DeckHtmlRenderer,
   HtmlRenderer,
 ]);

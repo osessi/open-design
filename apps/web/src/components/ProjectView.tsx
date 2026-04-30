@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createHtmlArtifactManifest } from '../artifacts/manifest';
+import { createHtmlArtifactManifest, inferLegacyManifest } from '../artifacts/manifest';
 import { createArtifactParser } from '../artifacts/parser';
 import { useT } from '../i18n';
 import { streamMessage } from '../providers/anthropic';
@@ -437,13 +437,22 @@ export function ProjectView({
         for (const ev of parser.feed(delta)) {
           if (ev.type === 'artifact:start') {
             liveHtml = '';
-            setArtifact({ identifier: ev.identifier, title: ev.title, html: '' });
+            setArtifact({
+              identifier: ev.identifier,
+              artifactType: ev.artifactType,
+              title: ev.title,
+              html: '',
+            });
           } else if (ev.type === 'artifact:chunk') {
             liveHtml += ev.delta;
             setArtifact((prev) =>
               prev
                 ? { ...prev, html: liveHtml }
-                : { identifier: ev.identifier, title: '', html: liveHtml },
+                : {
+                    identifier: ev.identifier,
+                    title: '',
+                    html: liveHtml,
+                  },
             );
           } else if (ev.type === 'artifact:end') {
             setArtifact((prev) => (prev ? { ...prev, html: ev.fullContent } : null));
@@ -560,30 +569,45 @@ export function ProjectView({
         .replace(/[^a-z0-9_-]+/g, '-')
         .replace(/^-+|-+$/g, '')
         .slice(0, 60) || 'artifact';
+      const ext = artifactExtensionFor(art);
       // Pick a name that doesn't collide with an existing project file.
-      // The first run uses `<base>.html`; subsequent runs append `-2`, `-3`…
+      // The first run uses `<base>.<ext>`; subsequent runs append `-2`, `-3`…
       // so prior artifacts aren't silently overwritten.
       const existing = new Set(projectFiles.map((f) => f.name));
-      let fileName = `${baseName}.html`;
+      let fileName = `${baseName}${ext}`;
       let n = 2;
       while (existing.has(fileName) && savedArtifactRef.current !== fileName) {
-        fileName = `${baseName}-${n}.html`;
+        fileName = `${baseName}-${n}${ext}`;
         n += 1;
       }
       if (savedArtifactRef.current === fileName) return;
       savedArtifactRef.current = fileName;
-      const manifest = createHtmlArtifactManifest({
-        entry: fileName,
-        title: art.title || art.identifier || fileName,
-        sourceSkillId: project.skillId ?? undefined,
-        designSystemId: project.designSystemId,
-        metadata: {
-          identifier: art.identifier,
-          inferred: false,
-        },
-      });
+      const title = art.title || art.identifier || fileName;
+      const metadata = {
+        identifier: art.identifier,
+        artifactType: art.artifactType,
+        inferred: false,
+      };
+      const manifest =
+        ext === '.html'
+          ? createHtmlArtifactManifest({
+              entry: fileName,
+              title,
+              sourceSkillId: project.skillId ?? undefined,
+              designSystemId: project.designSystemId,
+              metadata,
+            })
+          : inferLegacyManifest({
+              entry: fileName,
+              title,
+              metadata: {
+                ...metadata,
+                sourceSkillId: project.skillId ?? undefined,
+                designSystemId: project.designSystemId,
+              },
+            });
       const file = await writeProjectTextFile(project.id, fileName, art.html, {
-        artifactManifest: manifest,
+        artifactManifest: manifest ?? undefined,
       });
       if (file) {
         setFilesRefresh((n) => n + 1);
@@ -842,6 +866,16 @@ export function ProjectView({
       </div>
     </div>
   );
+}
+
+function artifactExtensionFor(art: Artifact): '.html' | '.jsx' | '.tsx' {
+  const type = (art.artifactType || '').toLowerCase();
+  const identifier = (art.identifier || '').toLowerCase();
+  if (type.includes('tsx') || identifier.endsWith('.tsx')) return '.tsx';
+  if (type.includes('jsx') || type.includes('react') || identifier.endsWith('.jsx')) {
+    return '.jsx';
+  }
+  return '.html';
 }
 
 function assistantAgentDisplayName(
