@@ -1,66 +1,66 @@
-# 目录规范
+# Directory guide
 
-本文件是 agent 进入仓库后的唯一入口真相源。先读本文件；进入 `apps/`、`packages/`、`tools/` 后，再读该层的 `AGENTS.md` 获取模块级细节。不要把模块细节复制回 root，root 只保留跨仓库边界、流程和命令。
+This file is the single source of truth for agents entering this repository. Read this file first; after entering `apps/`, `packages/`, or `tools/`, read that layer's `AGENTS.md` for module-level details. Do not copy module details back into the root file; root stays focused on cross-repository boundaries, workflow, and commands.
 
-## 核心文档索引
+## Core documentation index
 
-- 产品与上手：`README.md`、`README.zh-CN.md`、`QUICKSTART.md`。
-- 贡献与环境：`CONTRIBUTING.md`、`CONTRIBUTING.zh-CN.md`。
-- 架构与协议：`docs/spec.md`、`docs/architecture.md`、`docs/skills-protocol.md`、`docs/agent-adapters.md`、`docs/modes.md`。
-- 路线与参考：`docs/roadmap.md`、`docs/references.md`、`specs/current/maintainability-roadmap.md`。
-- 目录级 agent 说明：`apps/AGENTS.md`、`packages/AGENTS.md`、`tools/AGENTS.md`。
+- Product and onboarding: `README.md`, `README.zh-CN.md`, `QUICKSTART.md`.
+- Contribution and environment: `CONTRIBUTING.md`, `CONTRIBUTING.zh-CN.md`.
+- Architecture and protocols: `docs/spec.md`, `docs/architecture.md`, `docs/skills-protocol.md`, `docs/agent-adapters.md`, `docs/modes.md`.
+- Roadmap and references: `docs/roadmap.md`, `docs/references.md`, `specs/current/maintainability-roadmap.md`.
+- Directory-level agent guidance: `apps/AGENTS.md`, `packages/AGENTS.md`, `tools/AGENTS.md`.
 
-## Workspace 目录
+## Workspace directories
 
-- Workspace 包来自 `pnpm-workspace.yaml`：`apps/*`、`packages/*`、`tools/*`、`e2e`。
-- `apps/web` 是 Next.js 16 App Router + React 18 web runtime；不要恢复 `apps/nextjs`。
-- `apps/daemon` 是本地 privileged daemon 和 `od` bin，拥有 `/api/*`、agent spawning、skills、design systems、artifacts、static serving。
-- `apps/desktop` 是 Electron shell，通过 sidecar IPC 发现 web URL。
-- `packages/contracts` 是纯 TypeScript 的 web/daemon app contract 层。
-- `packages/sidecar-proto` 是 Open Design sidecar 业务 protocol；`packages/sidecar` 是 generic sidecar runtime；`packages/platform` 是 generic OS process primitives。
-- `tools/dev` 是唯一当前可用的本地开发生命周期控制面。
-- `e2e` 包含 Playwright UI specs 与 Vitest/jsdom integration tests。
+- Workspace packages come from `pnpm-workspace.yaml`: `apps/*`, `packages/*`, `tools/*`, and `e2e`.
+- `apps/web` is the Next.js 16 App Router + React 18 web runtime; do not restore `apps/nextjs`.
+- `apps/daemon` is the local privileged daemon and `od` bin. It owns `/api/*`, agent spawning, skills, design systems, artifacts, and static serving.
+- `apps/desktop` is the Electron shell; it discovers the web URL through sidecar IPC.
+- `packages/contracts` is the pure TypeScript web/daemon app contract layer.
+- `packages/sidecar-proto` owns the Open Design sidecar business protocol; `packages/sidecar` owns the generic sidecar runtime; `packages/platform` owns generic OS process primitives.
+- `tools/dev` is the only currently active local development lifecycle control plane.
+- `e2e` contains Playwright UI specs and Vitest/jsdom integration tests.
 
-## 非活跃或占位目录
+## Inactive or placeholder directories
 
-- `apps/nextjs` 与 `packages/shared` 已移除；不要重建或引用。
-- `apps/packaged` 仅是未来 packaged app assembly 占位；本轮不放活跃代码。
-- `tools/pack` 仅是未来 `tools-pack` 占位；本轮不新增命令或 packaging 逻辑。
-- `.od/`、`.tmp/`、`e2e/.od-data`、Playwright reports、agent scratch dirs 是本地运行数据，必须留在 git 外。
+- `apps/nextjs` and `packages/shared` have been removed; do not recreate or reference them.
+- `apps/packaged` is only a placeholder for future packaged app assembly; do not add active code there in this round.
+- `tools/pack` is only a placeholder for future `tools-pack`; do not add commands or packaging logic there in this round.
+- `.od/`, `.tmp/`, `e2e/.od-data`, Playwright reports, and agent scratch directories are local runtime data and must stay out of git.
 
-# 开发流程指导
+# Development workflow
 
-## 基础环境
+## Environment baseline
 
-- 运行目标是 Node `~24` 与 `pnpm@10.33.2`；使用 Corepack 选择 `package.json` 固定的 pnpm 版本。
-- 新增项目自有 entrypoint、module、script、test、reporter、config 默认使用 TypeScript。
-- Residual JavaScript 仅限生成产物、vendored dependency、明确记录的兼容构建产物，以及 `scripts/check-residual-js.ts` allowlist。
+- Runtime target is Node `~24` and `pnpm@10.33.2`; use Corepack so the pnpm version pinned in `package.json` is selected.
+- New project-owned entrypoints, modules, scripts, tests, reporters, and configs should default to TypeScript.
+- Residual JavaScript is limited to generated output, vendored dependencies, explicitly documented compatibility build artifacts, and the allowlist in `scripts/check-residual-js.ts`.
 
-## 本地生命周期
+## Local lifecycle
 
-- 只使用 `pnpm tools-dev` 作为本地开发生命周期入口。
-- 不要新增或恢复 root lifecycle alias：`pnpm dev`、`pnpm dev:all`、`pnpm daemon`、`pnpm preview`、`pnpm start`。
-- 端口以 `tools-dev` flags 为权威：`--daemon-port`、`--web-port`。
-- `tools-dev` 内部导出 `OD_PORT` 给 web proxy 目标，导出 `OD_WEB_PORT` 给 web listener；不要使用 `NEXT_PORT`。
+- Use `pnpm tools-dev` as the only local development lifecycle entry point.
+- Do not add or restore root lifecycle aliases: `pnpm dev`, `pnpm dev:all`, `pnpm daemon`, `pnpm preview`, or `pnpm start`.
+- Ports are governed by `tools-dev` flags: `--daemon-port` and `--web-port`.
+- `tools-dev` exports `OD_PORT` for the web proxy target and `OD_WEB_PORT` for the web listener; do not use `NEXT_PORT`.
 
-## 边界约束
+## Boundary constraints
 
-- App 业务逻辑不得感知 sidecar/control-plane 概念；sidecar awareness 只能放在 `apps/<app>/sidecar` 或 desktop sidecar entry wrapper。
-- Shared web/daemon app contracts 放在 `packages/contracts`；该包不得依赖 Next.js、Express、Node filesystem/process、browser APIs、SQLite、daemon internals 或 sidecar control-plane protocol。
-- Sidecar process stamp 只能有五个字段：`app`、`mode`、`namespace`、`ipc`、`source`。
-- Orchestration 层（`tools-dev`、未来 `tools-pack`、packaged launcher）必须调用 package primitives；不要手写 `--od-stamp-*` args 或 process-scan regex。
-- 默认 runtime files 写到 `<project-root>/.tmp/<source>/<namespace>/...`；POSIX IPC sockets 固定为 `/tmp/open-design/ipc/<namespace>/<app>.sock`。
+- App business logic must not know about sidecar/control-plane concepts. Keep sidecar awareness in `apps/<app>/sidecar` or the desktop sidecar entry wrapper.
+- Shared web/daemon app contracts belong in `packages/contracts`; that package must not depend on Next.js, Express, Node filesystem/process APIs, browser APIs, SQLite, daemon internals, or the sidecar control-plane protocol.
+- Sidecar process stamps must have exactly five fields: `app`, `mode`, `namespace`, `ipc`, and `source`.
+- Orchestration layers (`tools-dev`, future `tools-pack`, packaged launchers) must call package primitives; do not hand-build `--od-stamp-*` args or process-scan regexes.
+- Default runtime files live under `<project-root>/.tmp/<source>/<namespace>/...`; POSIX IPC sockets are fixed at `/tmp/open-design/ipc/<namespace>/<app>.sock`.
 
-## 验证策略
+## Validation strategy
 
-- package、workspace 或命令入口变化后运行 `pnpm install`，确保 workspace links 与 generated dist entries 新鲜。
-- 常规 ready 前至少运行 `pnpm typecheck` 与 `pnpm test`；涉及构建边界时再运行 `pnpm build`。
-- web/e2e loop 优先使用 `pnpm tools-dev run web --daemon-port <port> --web-port <port>`。
-- GUI-capable machine 上验证 desktop：运行 `pnpm tools-dev`，再用 `pnpm tools-dev inspect desktop status`。
-- stamp/namespace 变化必须验证两个并发 namespace，并分别执行 desktop `inspect eval` 与 `inspect screenshot`。
-- path/log 变化必须执行 `pnpm tools-dev logs --namespace <name> --json`，确认 log path 位于 `.tmp/tools-dev/<namespace>/...`。
+- After package, workspace, or command-entry changes, run `pnpm install` so workspace links and generated dist entries stay fresh.
+- Before marking regular work ready, run at least `pnpm typecheck` and `pnpm test`; run `pnpm build` as well when build boundaries are involved.
+- For the web/e2e loop, prefer `pnpm tools-dev run web --daemon-port <port> --web-port <port>`.
+- On a GUI-capable machine, validate desktop by running `pnpm tools-dev`, then `pnpm tools-dev inspect desktop status`.
+- Stamp/namespace changes must validate two concurrent namespaces and run desktop `inspect eval` plus `inspect screenshot` for each namespace.
+- Path/log changes must run `pnpm tools-dev logs --namespace <name> --json` and confirm log paths are under `.tmp/tools-dev/<namespace>/...`.
 
-# 常用命令
+# Common commands
 
 ```bash
 pnpm install
@@ -96,26 +96,26 @@ pnpm -r --if-present run test
 
 # FAQ
 
-## 为什么没有 root `pnpm dev` / `pnpm start`？
+## Why is there no root `pnpm dev` / `pnpm start`?
 
-为了避免 daemon、web、desktop 被多个入口以不一致的 env、ports、namespace 或 logs 方式启动。所有本地 lifecycle 都必须走 `pnpm tools-dev`。
+To avoid starting daemon, web, and desktop through inconsistent env, port, namespace, or log paths. All local lifecycle flows must go through `pnpm tools-dev`.
 
-## 为什么不要恢复 `apps/nextjs`？
+## Why should `apps/nextjs` not be restored?
 
-当前 web runtime 是 `apps/web`。历史 `apps/nextjs` 已从活跃布局移除；恢复它会重新引入重复 app 边界和过期脚本。
+The current web runtime is `apps/web`. The historical `apps/nextjs` layout has been removed from the active repo shape; restoring it would reintroduce duplicate app boundaries and stale scripts.
 
-## desktop 如何发现 web URL？
+## How does desktop discover the web URL?
 
-desktop 通过 sidecar IPC 查询 runtime status。web URL 来自 `tools-dev` 启动状态，不由 desktop 业务层猜测端口或读取 web internals。
+Desktop queries runtime status through sidecar IPC. The web URL comes from `tools-dev` launch status, not from desktop guessing ports or reading web internals.
 
-## sidecar-proto、sidecar、platform 如何分工？
+## How are sidecar-proto, sidecar, and platform split?
 
-`@open-design/sidecar-proto` 拥有 Open Design 的 app/mode/source constants、namespace validation、stamp fields/flags、IPC message schema、status shapes 与 error semantics。`@open-design/sidecar` 只提供 generic bootstrap、IPC transport、path/runtime resolver、launch env、JSON runtime files。`@open-design/platform` 只提供 generic OS process stamp serialization、command parsing、process matching/search primitives，并消费 proto descriptor。
+`@open-design/sidecar-proto` owns Open Design app/mode/source constants, namespace validation, stamp fields/flags, IPC message schema, status shapes, and error semantics. `@open-design/sidecar` provides only generic bootstrap, IPC transport, path/runtime resolution, launch env, and JSON runtime files. `@open-design/platform` provides only generic OS process stamp serialization, command parsing, and process matching/search primitives, consuming the proto descriptor.
 
-## 数据写在哪里？
+## Where is data written?
 
-daemon 默认写 `.od/`：SQLite 在 `.od/app.sqlite`，agent CWD 在 `.od/projects/<id>/`，saved renders 在 `.od/artifacts/`。`OD_DATA_DIR` 可相对 repo root 重定位数据；Playwright 用它隔离测试数据。
+The daemon writes `.od/` by default: SQLite at `.od/app.sqlite`, agent CWDs under `.od/projects/<id>/`, and saved renders under `.od/artifacts/`. `OD_DATA_DIR` can relocate data relative to the repo root; Playwright uses it to isolate test data.
 
-## 什么时候需要跑 `pnpm install`？
+## When is `pnpm install` required?
 
-只要改了 package manifest、workspace 布局、命令入口、bin/link 相关内容，或删除/新增 workspace package，就先跑 `pnpm install`。
+Run `pnpm install` after changing package manifests, workspace layout, command entrypoints, bin/link-related content, or after adding/removing workspace packages.

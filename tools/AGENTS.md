@@ -1,27 +1,27 @@
 # tools/AGENTS.md
 
-先遵守 root `AGENTS.md`。本文件只记录 `tools/` 层的模块级边界。
+Follow the root `AGENTS.md` first. This file only records module-level boundaries for `tools/`.
 
-## 活跃工具
+## Active tools
 
-- `tools/dev` 提供 `@open-design/tools-dev` 与 `tools-dev` bin，是唯一当前可用的本地开发生命周期控制面。
-- `pnpm tools-dev` 管理 daemon -> web -> desktop。
-- `pnpm tools-dev run web` 是 foreground daemon + web，供 Playwright webServer 使用。
-- `pnpm tools-dev inspect desktop ...` 通过 sidecar IPC 检查 desktop runtime。
+- `tools/dev` provides `@open-design/tools-dev` and the `tools-dev` bin. It is the only currently active local development lifecycle control plane.
+- `pnpm tools-dev` manages daemon -> web -> desktop.
+- `pnpm tools-dev run web` runs foreground daemon + web for the Playwright webServer flow.
+- `pnpm tools-dev inspect desktop ...` inspects the desktop runtime through sidecar IPC.
 
-## 占位工具
+## Placeholder tools
 
-- `tools/pack` 是未来 `tools-pack` workstream 的最小占位。
-- 本轮不要在 `tools/pack` 中加入 package manifest、root script、packaging command、release/signing 逻辑。
-- root `pnpm build` 的 package/build 边界暂不在本轮调整，后续交给 `tools-pack` 任务治理。
+- `tools/pack` is the minimal placeholder for the future `tools-pack` workstream.
+- Do not add a package manifest, root script, packaging command, or release/signing logic under `tools/pack` in this round.
+- The package/build boundary of root `pnpm build` is intentionally unchanged in this round and should be handled by the future `tools-pack` task.
 
-## Orchestration 边界
+## Orchestration boundary
 
-- orchestration 层必须消费 `@open-design/sidecar-proto`、`@open-design/sidecar`、`@open-design/platform` primitives。
-- 不要在 `tools/dev`、未来 `tools/pack` 或 packaged launcher 中手写 `--od-stamp-*` args、process-scan regex、runtime token、process role 或重复 namespace/source args。
-- 端口 flags 是权威输入：`--daemon-port`、`--web-port`。内部 env 是 `OD_PORT` 与 `OD_WEB_PORT`，不要引入 `NEXT_PORT`。
+- Orchestration layers must consume primitives from `@open-design/sidecar-proto`, `@open-design/sidecar`, and `@open-design/platform`.
+- Do not hand-build `--od-stamp-*` args, process-scan regexes, runtime tokens, process roles, or duplicate namespace/source args in `tools/dev`, future `tools/pack`, or packaged launchers.
+- Port flags are authoritative inputs: `--daemon-port` and `--web-port`. Internal env vars are `OD_PORT` and `OD_WEB_PORT`; do not introduce `NEXT_PORT`.
 
-## 常用 tools 命令
+## Common tools commands
 
 ```bash
 pnpm --filter @open-design/tools-dev typecheck

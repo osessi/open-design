@@ -1,31 +1,31 @@
 # apps/AGENTS.md
 
-先遵守 root `AGENTS.md`。本文件只记录 `apps/` 层的模块级边界。
+Follow the root `AGENTS.md` first. This file only records module-level boundaries for `apps/`.
 
-## 活跃 apps
+## Active apps
 
-- `apps/web`：Next.js 16 App Router + React 18 web runtime。入口是 `apps/web/app/`，主 client shell 是 `apps/web/src/App.tsx`。本地 `tools-dev` web run 中，`apps/web/next.config.ts` 将 `/api/*`、`/artifacts/*`、`/frames/*` rewrite 到 `OD_PORT`。
-- `apps/daemon`：Express + SQLite local daemon 与 `od` bin。它拥有 REST/SSE API、agent CLI spawning、skills、design systems、artifact persistence、static serving、local data under `.od/`。
-- `apps/desktop`：Electron shell。desktop 不猜测 web 端口；它通过 sidecar IPC 读取 runtime status 并打开 web URL。
+- `apps/web`: Next.js 16 App Router + React 18 web runtime. Entrypoints live in `apps/web/app/`; the main client shell is `apps/web/src/App.tsx`. During local `tools-dev` web runs, `apps/web/next.config.ts` rewrites `/api/*`, `/artifacts/*`, and `/frames/*` to `OD_PORT`.
+- `apps/daemon`: Express + SQLite local daemon and `od` bin. It owns REST/SSE APIs, agent CLI spawning, skills, design systems, artifact persistence, static serving, and local data under `.od/`.
+- `apps/desktop`: Electron shell. Desktop does not guess the web port; it reads runtime status through sidecar IPC and opens the reported web URL.
 
-## daemon layout
+## Daemon layout
 
-- `apps/daemon/src/` 只放 daemon app 本体源码。
-- `apps/daemon/tests/` 放 daemon tests。
-- `apps/daemon/sidecar/` 放 daemon sidecar entry。
-- CLI/agent 参数或 stdout parser 变化属于 `apps/daemon/src/agents.ts` 及对应 parser tests。
+- `apps/daemon/src/` contains only daemon app source.
+- `apps/daemon/tests/` contains daemon tests.
+- `apps/daemon/sidecar/` contains the daemon sidecar entry.
+- CLI/agent argument changes or stdout parser changes belong in `apps/daemon/src/agents.ts` and the matching parser tests.
 
-## sidecar awareness
+## Sidecar awareness
 
-- App 业务层不得 import sidecar packages，也不要分支判断 `runtime.mode`、`namespace`、`ipc`、`source`。
-- sidecar awareness 只能位于 `apps/<app>/sidecar` 或 desktop sidecar entry wrapper。
+- App business layers must not import sidecar packages or branch on `runtime.mode`, `namespace`, `ipc`, or `source`.
+- Keep sidecar awareness in `apps/<app>/sidecar` or the desktop sidecar entry wrapper.
 
-## 非活跃 app 目录
+## Inactive app directories
 
-- `apps/nextjs` 已移除；不要恢复。
-- `apps/packaged` 是未来 packaged app assembly 的最小占位。本轮不要添加 package manifest、runtime code 或 lifecycle script。
+- `apps/nextjs` has been removed; do not restore it.
+- `apps/packaged` is a minimal placeholder for future packaged app assembly. Do not add a package manifest, runtime code, or lifecycle script there in this round.
 
-## 常用 app 命令
+## Common app commands
 
 ```bash
 pnpm --filter @open-design/web typecheck
