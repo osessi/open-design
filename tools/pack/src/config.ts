@@ -16,6 +16,7 @@ export const WORKSPACE_ROOT = resolve(__dirname, ENTRY_DIR_NAME === "dist" ? "..
 
 export type ToolPackPlatform = "mac";
 export type ToolPackBuildOutput = "all" | "app" | "dmg" | "zip";
+export type ToolPackWebOutputMode = "server" | "standalone";
 
 export type ToolPackCliOptions = {
   dir?: string;
@@ -50,6 +51,7 @@ export type ToolPackConfig = {
   roots: ToolPackRoots;
   signed: boolean;
   to: ToolPackBuildOutput;
+  webOutputMode: ToolPackWebOutputMode;
   workspaceRoot: string;
 };
 
@@ -57,6 +59,12 @@ function resolveToolPackBuildOutput(value: string | undefined): ToolPackBuildOut
   if (value == null || value.length === 0) return "all";
   if (value === "all" || value === "app" || value === "dmg" || value === "zip") return value;
   throw new Error(`unsupported mac --to target: ${value}`);
+}
+
+function resolveToolPackWebOutputMode(value: string | undefined): ToolPackWebOutputMode {
+  if (value == null || value.length === 0) return "server";
+  if (value === "server" || value === "standalone") return value;
+  throw new Error(`unsupported OD_WEB_OUTPUT_MODE value: ${value}`);
 }
 
 function resolveElectronVersion(workspaceRoot: string): string {
@@ -119,6 +127,7 @@ export function resolveToolPackConfig(
     },
     signed: options.signed === true,
     to: resolveToolPackBuildOutput(options.to),
+    webOutputMode: resolveToolPackWebOutputMode(process.env.OD_WEB_OUTPUT_MODE),
     workspaceRoot: WORKSPACE_ROOT,
   };
 }

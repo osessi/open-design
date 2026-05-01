@@ -24,6 +24,7 @@ import {
 } from "@open-design/sidecar";
 import { createProcessStampArgs, stopProcesses, waitForProcessExit } from "@open-design/platform";
 
+import type { PackagedWebOutputMode } from "./config.js";
 import type { PackagedNamespacePaths } from "./paths.js";
 
 const require = createRequire(import.meta.url);
@@ -200,7 +201,7 @@ async function closeManagedChild(child: ManagedSidecarChild): Promise<void> {
 export async function startPackagedSidecars(
   runtime: SidecarRuntimeContext<SidecarStamp>,
   paths: PackagedNamespacePaths,
-  options: { nodeCommand: string | null },
+  options: { nodeCommand: string | null; webStandaloneRoot: string | null; webOutputMode: PackagedWebOutputMode },
 ): Promise<PackagedSidecarHandle> {
   await mkdir(paths.namespaceRoot, { recursive: true });
   await mkdir(paths.cacheRoot, { recursive: true });
@@ -242,7 +243,8 @@ export async function startPackagedSidecars(
       env: {
         [SIDECAR_ENV.DAEMON_PORT]: extractPort(daemonStatus.url),
         [SIDECAR_ENV.WEB_PORT]: "0",
-        OD_WEB_OUTPUT_MODE: "server",
+        ...(options.webStandaloneRoot == null ? {} : { OD_WEB_STANDALONE_ROOT: options.webStandaloneRoot }),
+        OD_WEB_OUTPUT_MODE: options.webOutputMode,
         PORT: "0",
       },
       nodeCommand: options.nodeCommand,

@@ -1,16 +1,17 @@
+import { spawn, type ChildProcess } from "node:child_process";
 import {
   createServer as createHttpServer,
   request as createHttpRequest,
   type IncomingMessage,
-  type Server,
+  type Server as HttpServer,
   type ServerResponse,
 } from "node:http";
 import { request as createHttpsRequest } from "node:https";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import type { AddressInfo } from "node:net";
-import { dirname, join } from "node:path";
+import { createServer as createTcpServer, type AddressInfo, type Server as TcpServer } from "node:net";
+import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -28,15 +29,29 @@ import {
 
 const HOST = "127.0.0.1";
 const DAEMON_PORT_ENV = SIDECAR_ENV.DAEMON_PORT;
+const WEB_DIST_DIR_ENV = SIDECAR_ENV.WEB_DIST_DIR;
 const WEB_PORT_ENV = SIDECAR_ENV.WEB_PORT;
 const TOOLS_DEV_PARENT_PID_ENV = SIDECAR_ENV.TOOLS_DEV_PARENT_PID;
+const WEB_OUTPUT_MODE_ENV = "OD_WEB_OUTPUT_MODE";
+const WEB_STANDALONE_ROOT_ENV = "OD_WEB_STANDALONE_ROOT";
 const SHUTDOWN_TIMEOUT_MS = 3000;
 const require = createRequire(import.meta.url);
-const createNextServer = require("next") as (options: { dev: boolean; dir: string }) => {
+
+type NextApp = {
   close?: () => Promise<void>;
   getRequestHandler(): (request: IncomingMessage, response: ServerResponse) => Promise<void>;
   prepare(): Promise<void>;
 };
+
+type StandaloneBackend = {
+  origin: string;
+  stop(): Promise<void>;
+};
+
+function createNextApp(options: { dev: boolean; dir: string }): NextApp {
+  const createNextServer = require("next") as (nextOptions: { dev: boolean; dir: string }) => NextApp;
+  return createNextServer(options);
+}
 
 export type WebSidecarHandle = {
   status(): Promise<WebStatusSnapshot>;
@@ -73,6 +88,46 @@ function parsePort(value: string | undefined): number {
   return port;
 }
 
+function resolveWebDistDir(webRoot: string): string {
+  const configured = process.env[WEB_DIST_DIR_ENV];
+  if (configured == null || configured.length === 0) return join(webRoot, ".next");
+  return isAbsolute(configured) ? configured : join(webRoot, configured);
+}
+
+function resolveConfiguredStandaloneRoot(): string | null {
+  const configured = process.env[WEB_STANDALONE_ROOT_ENV];
+  if (configured == null || configured.length === 0) return null;
+  return isAbsolute(configured) ? configured : join(process.cwd(), configured);
+}
+
+export function resolveStandaloneServerEntry(
+  webRoot: string = resolveWebRoot(),
+  standaloneRoot: string | null = resolveConfiguredStandaloneRoot(),
+): string | null {
+  const distDir = resolveWebDistDir(webRoot);
+  const configuredRoot = standaloneRoot == null || standaloneRoot.length === 0
+    ? null
+    : isAbsolute(standaloneRoot)
+      ? standaloneRoot
+      : join(process.cwd(), standaloneRoot);
+  const candidates = [
+    ...(configuredRoot == null
+      ? []
+      : [
+        join(configuredRoot, "apps", "web", "server.js"),
+        join(configuredRoot, "server.js"),
+      ]),
+    join(distDir, "standalone", "apps", "web", "server.js"),
+    join(distDir, "standalone", "server.js"),
+  ];
+
+  return candidates.find((candidate) => existsSync(candidate)) ?? null;
+}
+
+function shouldUseStandaloneOutput(runtime: SidecarRuntimeContext<SidecarStamp>): boolean {
+  return runtime.mode !== "dev" && process.env[WEB_OUTPUT_MODE_ENV] === "standalone";
+}
+
 function resolveDaemonOrigin(): string | null {
   const port = parsePort(process.env[DAEMON_PORT_ENV]);
   return port === 0 ? null : `http://${HOST}:${port}`;
@@ -93,6 +148,15 @@ export function resolveDaemonProxyTarget(
   daemonOrigin: string,
   requestUrl: string | undefined,
 ): URL | null {
+  const target = resolveHttpProxyTarget(daemonOrigin, requestUrl);
+  if (target == null || !isDaemonProxyPathname(target.pathname)) return null;
+  return target;
+}
+
+function resolveHttpProxyTarget(
+  origin: string,
+  requestUrl: string | undefined,
+): URL | null {
   if (requestUrl == null) return null;
 
   let parsedRequestUrl: URL;
@@ -102,12 +166,10 @@ export function resolveDaemonProxyTarget(
     return null;
   }
 
-  if (!isDaemonProxyPathname(parsedRequestUrl.pathname)) return null;
-
-  return new URL(`${parsedRequestUrl.pathname}${parsedRequestUrl.search}`, daemonOrigin);
+  return new URL(`${parsedRequestUrl.pathname}${parsedRequestUrl.search}`, origin);
 }
 
-async function proxyToDaemon(
+async function proxyHttpRequest(
   target: URL,
   request: IncomingMessage,
   response: ServerResponse,
@@ -153,7 +215,7 @@ async function prepareNextApp(app: { prepare(): Promise<void> }, dir: string): P
   await writeFile(nextEnvPath, previousNextEnv, "utf8").catch(() => undefined);
 }
 
-async function listen(server: Server, port: number): Promise<number> {
+async function listen(server: HttpServer | TcpServer, port: number): Promise<number> {
   await new Promise<void>((resolveListen, rejectListen) => {
     server.once("error", rejectListen);
     server.listen({ host: HOST, port }, () => {
@@ -169,11 +231,124 @@ async function listen(server: Server, port: number): Promise<number> {
   return address.port;
 }
 
-async function closeHttpServer(server: Server): Promise<void> {
+async function closeServer(server: HttpServer | TcpServer): Promise<void> {
   if (!server.listening) return;
   await new Promise<void>((resolveClose, rejectClose) => {
     server.close((error) => (error == null ? resolveClose() : rejectClose(error)));
   });
+}
+
+async function reserveTcpPort(): Promise<number> {
+  const server = createTcpServer();
+  try {
+    return await listen(server, 0);
+  } finally {
+    await closeServer(server).catch(() => undefined);
+  }
+}
+
+async function waitForChildExit(child: ChildProcess): Promise<void> {
+  if (child.exitCode != null || child.signalCode != null) return;
+
+  await new Promise<void>((resolveExit) => {
+    child.once("exit", () => resolveExit());
+  });
+}
+
+async function stopStandaloneChild(child: ChildProcess): Promise<void> {
+  if (child.exitCode != null || child.signalCode != null) return;
+
+  child.kill("SIGTERM");
+  let timeout: NodeJS.Timeout | undefined;
+  try {
+    await Promise.race([
+      waitForChildExit(child),
+      new Promise<void>((resolveTimeout) => {
+        timeout = setTimeout(resolveTimeout, SHUTDOWN_TIMEOUT_MS);
+        timeout.unref();
+      }),
+    ]);
+  } finally {
+    if (timeout != null) clearTimeout(timeout);
+  }
+
+  if (child.exitCode == null && child.signalCode == null) {
+    child.kill("SIGKILL");
+    await waitForChildExit(child).catch(() => undefined);
+  }
+}
+
+async function probeStandaloneBackend(origin: string): Promise<boolean> {
+  return await new Promise<boolean>((resolveProbe) => {
+    const request = createHttpRequest(new URL("/", origin), { method: "HEAD", timeout: 800 }, (response) => {
+      response.resume();
+      resolveProbe(true);
+    });
+    request.on("timeout", () => {
+      request.destroy();
+      resolveProbe(false);
+    });
+    request.on("error", () => resolveProbe(false));
+    request.end();
+  });
+}
+
+async function waitForStandaloneBackendReady(
+  child: ChildProcess,
+  origin: string,
+  timeoutMs = 35_000,
+): Promise<void> {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    if (child.exitCode != null || child.signalCode != null) {
+      throw new Error(`standalone Next.js server exited before readiness: code=${child.exitCode} signal=${child.signalCode}`);
+    }
+    if (await probeStandaloneBackend(origin)) return;
+    await new Promise((resolveWait) => setTimeout(resolveWait, 150));
+  }
+
+  throw new Error(`timed out waiting for standalone Next.js server at ${origin}`);
+}
+
+async function startStandaloneBackend(webRoot: string): Promise<StandaloneBackend> {
+  const entryPath = resolveStandaloneServerEntry(webRoot);
+  if (entryPath == null) {
+    throw new Error(`missing Next.js standalone server under ${resolveWebDistDir(webRoot)}; rebuild with ${WEB_OUTPUT_MODE_ENV}=standalone`);
+  }
+
+  const port = await reserveTcpPort();
+  const origin = `http://${HOST}:${port}`;
+  console.log(`[open-design web] starting standalone Next.js server from ${entryPath}`);
+  const child = spawn(process.execPath, [entryPath], {
+    cwd: dirname(entryPath),
+    env: {
+      ...process.env,
+      HOSTNAME: HOST,
+      NODE_ENV: "production",
+      PORT: String(port),
+    },
+    stdio: ["ignore", "inherit", "inherit"],
+    windowsHide: true,
+  });
+  await new Promise<void>((resolveSpawn, rejectSpawn) => {
+    child.once("error", rejectSpawn);
+    child.once("spawn", resolveSpawn);
+  });
+
+  try {
+    await waitForStandaloneBackendReady(child, origin);
+  } catch (error) {
+    await stopStandaloneChild(child).catch(() => undefined);
+    throw error;
+  }
+
+  return {
+    origin,
+    async stop() {
+      await stopStandaloneChild(child);
+    },
+  };
 }
 
 async function settleShutdownTask(task: Promise<unknown> | undefined): Promise<void> {
@@ -222,28 +397,11 @@ function attachParentMonitor(stop: () => Promise<void>): void {
   timer.unref();
 }
 
-export async function startWebSidecar(runtime: SidecarRuntimeContext<SidecarStamp>): Promise<WebSidecarHandle> {
-  const dir = resolveWebRoot();
-  const app = createNextServer({ dev: runtime.mode === "dev", dir });
-  await prepareNextApp(app, dir);
-
-  const daemonOrigin = resolveDaemonOrigin();
-  const handleRequest = app.getRequestHandler();
-  const httpServer = createHttpServer((request, response) => {
-    const daemonProxyTarget = daemonOrigin == null ? null : resolveDaemonProxyTarget(daemonOrigin, request.url);
-    if (daemonProxyTarget != null) {
-      void proxyToDaemon(daemonProxyTarget, request, response).catch((error: unknown) => {
-        response.statusCode = 502;
-        response.end(error instanceof Error ? error.message : String(error));
-      });
-      return;
-    }
-
-    void handleRequest(request, response).catch((error: unknown) => {
-      response.statusCode = 500;
-      response.end(error instanceof Error ? error.message : String(error));
-    });
-  });
+async function createWebSidecarHandle(
+  runtime: SidecarRuntimeContext<SidecarStamp>,
+  httpServer: HttpServer,
+  closeRuntime: () => Promise<void> | void,
+): Promise<WebSidecarHandle> {
   const port = await listen(httpServer, parsePort(process.env[WEB_PORT_ENV]));
   const state: WebStatusSnapshot = {
     pid: process.pid,
@@ -264,8 +422,8 @@ export async function startWebSidecar(runtime: SidecarRuntimeContext<SidecarStam
     state.state = "stopped";
     state.updatedAt = new Date().toISOString();
     await settleShutdownTask(ipcServer?.close());
-    await settleShutdownTask(closeHttpServer(httpServer));
-    await settleShutdownTask((app as unknown as { close?: () => Promise<void> }).close?.());
+    await settleShutdownTask(closeServer(httpServer));
+    await settleShutdownTask(Promise.resolve().then(closeRuntime));
     resolveStopped();
   }
 
@@ -302,4 +460,74 @@ export async function startWebSidecar(runtime: SidecarRuntimeContext<SidecarStam
       return stoppedPromise;
     },
   };
+}
+
+function createDaemonProxyHandler(
+  daemonOrigin: string | null,
+  fallback: (request: IncomingMessage, response: ServerResponse) => Promise<void>,
+): (request: IncomingMessage, response: ServerResponse) => void {
+  return (request, response) => {
+    const daemonProxyTarget = daemonOrigin == null ? null : resolveDaemonProxyTarget(daemonOrigin, request.url);
+    if (daemonProxyTarget != null) {
+      void proxyHttpRequest(daemonProxyTarget, request, response).catch((error: unknown) => {
+        response.statusCode = 502;
+        response.end(error instanceof Error ? error.message : String(error));
+      });
+      return;
+    }
+
+    void fallback(request, response).catch((error: unknown) => {
+      response.statusCode = 500;
+      response.end(error instanceof Error ? error.message : String(error));
+    });
+  };
+}
+
+async function startRegularNextSidecar(
+  runtime: SidecarRuntimeContext<SidecarStamp>,
+  webRoot: string,
+): Promise<WebSidecarHandle> {
+  const app = createNextApp({ dev: runtime.mode === "dev", dir: webRoot });
+  await prepareNextApp(app, webRoot);
+
+  const daemonOrigin = resolveDaemonOrigin();
+  const handleRequest = app.getRequestHandler();
+  const httpServer = createHttpServer(createDaemonProxyHandler(daemonOrigin, handleRequest));
+
+  return await createWebSidecarHandle(runtime, httpServer, async () => {
+    await app.close?.();
+  });
+}
+
+async function startStandaloneNextSidecar(
+  runtime: SidecarRuntimeContext<SidecarStamp>,
+  webRoot: string,
+): Promise<WebSidecarHandle> {
+  const daemonOrigin = resolveDaemonOrigin();
+  const backend = await startStandaloneBackend(webRoot);
+  const httpServer = createHttpServer(createDaemonProxyHandler(daemonOrigin, async (request, response) => {
+    const target = resolveHttpProxyTarget(backend.origin, request.url);
+    if (target == null) {
+      response.statusCode = 400;
+      response.end("invalid request URL");
+      return;
+    }
+    await proxyHttpRequest(target, request, response);
+  }));
+
+  try {
+    return await createWebSidecarHandle(runtime, httpServer, backend.stop);
+  } catch (error) {
+    await backend.stop().catch(() => undefined);
+    throw error;
+  }
+}
+
+export async function startWebSidecar(runtime: SidecarRuntimeContext<SidecarStamp>): Promise<WebSidecarHandle> {
+  const webRoot = resolveWebRoot();
+  if (shouldUseStandaloneOutput(runtime)) {
+    return await startStandaloneNextSidecar(runtime, webRoot);
+  }
+
+  return await startRegularNextSidecar(runtime, webRoot);
 }

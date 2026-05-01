@@ -65,6 +65,8 @@ type MacPaths = {
   systemApplicationsAppPath: string;
   tarballsRoot: string;
   userApplicationsAppPath: string;
+  webStandaloneHookAuditPath: string;
+  webStandaloneHookConfigPath: string;
   zipPath: string;
 };
 
@@ -149,6 +151,8 @@ export type MacCleanupResult = {
 export type ElectronBuilderTarget = "dir" | "dmg" | "zip";
 
 const DESKTOP_LOG_ECHO_ENV = "OD_DESKTOP_LOG_ECHO";
+const WEB_STANDALONE_HOOK_CONFIG_ENV = "OD_TOOLS_PACK_WEB_STANDALONE_HOOK_CONFIG";
+const WEB_STANDALONE_RESOURCE_NAME = "open-design-web-standalone";
 const ELECTRON_BUILDER_ASAR = false;
 const ELECTRON_BUILDER_COMPRESSION = "store";
 const ELECTRON_BUILDER_FILE_PATTERNS = [
@@ -172,6 +176,7 @@ export type MacSizeReport = {
     compression: string;
     filePatterns: readonly string[];
     targets: ElectronBuilderTarget[];
+    webOutputMode: ToolPackConfig["webOutputMode"];
   };
   dmgBytes: number | null;
   generatedAt: string;
@@ -195,8 +200,10 @@ export type MacSizeReport = {
     sharpLibvipsBytes: number;
     sourcemapBytes: number;
     tsbuildInfoBytes: number;
+    webCopiedStandaloneBytes: number;
     webNextCacheBytes: number;
     webPackageBytes: number;
+    webPackageStandaloneBytes: number;
   };
   zipBytes: number | null;
 };
@@ -246,6 +253,8 @@ function resolveMacPaths(config: ToolPackConfig): MacPaths {
     systemApplicationsAppPath: join("/Applications", macAppBundleName(config.namespace)),
     tarballsRoot: join(namespaceRoot, "tarballs"),
     userApplicationsAppPath: join(homedir(), "Applications", macAppBundleName(config.namespace)),
+    webStandaloneHookAuditPath: join(namespaceRoot, "web-standalone-after-pack-audit.json"),
+    webStandaloneHookConfigPath: join(namespaceRoot, "web-standalone-after-pack-config.json"),
     zipPath: join(namespaceRoot, "zip", `${PRODUCT_NAME}-${namespaceToken}.zip`),
   };
 }
@@ -333,6 +342,48 @@ async function readPackagedVersion(config: ToolPackConfig): Promise<string> {
   return packageJson.version;
 }
 
+async function assertWebStandaloneOutput(config: ToolPackConfig): Promise<void> {
+  const webRoot = join(config.workspaceRoot, "apps", "web");
+  const standaloneSourceRoot = join(webRoot, ".next", "standalone");
+  const candidates = [
+    join(standaloneSourceRoot, "apps", "web", "server.js"),
+    join(standaloneSourceRoot, "server.js"),
+  ];
+
+  for (const candidate of candidates) {
+    if (await pathExists(candidate)) return;
+  }
+
+  throw new Error("Next.js standalone server output was not produced under apps/web/.next/standalone");
+}
+
+async function writeWebStandaloneHookConfig(config: ToolPackConfig, paths: MacPaths): Promise<string> {
+  const webRoot = join(config.workspaceRoot, "apps", "web");
+  await assertWebStandaloneOutput(config);
+
+  await mkdir(dirname(paths.webStandaloneHookConfigPath), { recursive: true });
+  await writeFile(
+    paths.webStandaloneHookConfigPath,
+    `${JSON.stringify(
+      {
+        auditReportPath: paths.webStandaloneHookAuditPath,
+        pruneCopiedSharp: true,
+        pruneRootNext: true,
+        resourceName: WEB_STANDALONE_RESOURCE_NAME,
+        standaloneSourceRoot: join(webRoot, ".next", "standalone"),
+        version: 1,
+        webPublicSourceRoot: join(webRoot, "public"),
+        webStaticSourceRoot: join(webRoot, ".next", "static"),
+        workspaceRoot: config.workspaceRoot,
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+  return paths.webStandaloneHookConfigPath;
+}
+
 async function buildWorkspaceArtifacts(config: ToolPackConfig): Promise<void> {
   const webNextEnvPath = join(config.workspaceRoot, "apps", "web", "next-env.d.ts");
   const previousWebNextEnv = await readFile(webNextEnvPath, "utf8").catch(() => null);
@@ -343,7 +394,7 @@ async function buildWorkspaceArtifacts(config: ToolPackConfig): Promise<void> {
   await runPnpm(config, ["--filter", "@open-design/daemon", "build"]);
   try {
     await runPnpm(config, ["--filter", "@open-design/web", "build"], {
-      OD_WEB_OUTPUT_MODE: "server",
+      OD_WEB_OUTPUT_MODE: config.webOutputMode,
     });
     await runPnpm(config, ["--filter", "@open-design/web", "build:sidecar"]);
   } finally {
@@ -450,6 +501,7 @@ async function writeAssembledApp(
       {
         namespace: config.namespace,
         nodeCommandRelative: "open-design/bin/node",
+        webOutputMode: config.webOutputMode,
         ...(config.portable ? {} : { namespaceBaseRoot: config.roots.runtime.namespaceBaseRoot }),
       },
       null,
@@ -480,9 +532,13 @@ async function runElectronBuilder(
 ): Promise<void> {
   const namespaceToken = sanitizeNamespace(config.namespace);
   const packagedVersion = await readPackagedVersion(config);
+  const webStandaloneHookConfigPath = config.webOutputMode === "standalone"
+    ? await writeWebStandaloneHookConfig(config, paths)
+    : null;
   const builderConfig = {
     appId: "io.open-design.desktop",
     artifactName: `${PRODUCT_NAME}-${namespaceToken}.\${ext}`,
+    afterPack: webStandaloneHookConfigPath == null ? undefined : macResources.webStandaloneAfterPackHook,
     afterSign: config.signed ? macResources.notarizeHook : undefined,
     asar: ELECTRON_BUILDER_ASAR,
     buildDependenciesFromSource: false,
@@ -549,6 +605,7 @@ async function runElectronBuilder(
     env: {
       ...process.env,
       ...(config.signed ? {} : { CSC_IDENTITY_AUTO_DISCOVERY: "false" }),
+      ...(webStandaloneHookConfigPath == null ? {} : { [WEB_STANDALONE_HOOK_CONFIG_ENV]: webStandaloneHookConfigPath }),
     },
   });
 }
@@ -681,6 +738,7 @@ async function collectMacSizeReport(
       compression: ELECTRON_BUILDER_COMPRESSION,
       filePatterns: ELECTRON_BUILDER_FILE_PATTERNS,
       targets,
+      webOutputMode: config.webOutputMode,
     },
     dmgBytes: artifacts.dmgPath == null ? null : await sizeExistingFileBytes(artifacts.dmgPath),
     generatedAt: new Date().toISOString(),
@@ -702,12 +760,14 @@ async function collectMacSizeReport(
       electronLocalesBytes: await sumChildDirectorySizes(electronFrameworkResourcesRoot, (name) => name.endsWith(".lproj")),
       markdownBytes: await sizePathBytes(paths.appPath, { includeFile: (path) => path.endsWith(".md") }),
       nextBytes: await sizePathBytes(join(appNodeModulesRoot, "next")),
-      nextSwcBytes: await sizePathBytes(join(appNodeModulesRoot, "@next", `swc-darwin-${darwinArch}`)),
+      nextSwcBytes: await sumChildDirectorySizes(join(appNodeModulesRoot, "@next"), (name) => name.startsWith("swc-darwin-")),
       sharpLibvipsBytes: await sizePathBytes(join(appNodeModulesRoot, "@img", `sharp-libvips-darwin-${darwinArch}`)),
       sourcemapBytes: await sizePathBytes(paths.appPath, { includeFile: (path) => path.endsWith(".map") }),
       tsbuildInfoBytes: await sizePathBytes(paths.appPath, { includeFile: (path) => path.endsWith(".tsbuildinfo") }),
+      webCopiedStandaloneBytes: await sizePathBytes(join(appResourcesRoot, WEB_STANDALONE_RESOURCE_NAME)),
       webNextCacheBytes: await sizePathBytes(join(appNodeModulesRoot, "@open-design", "web", ".next", "cache")),
       webPackageBytes: await sizePathBytes(join(appNodeModulesRoot, "@open-design", "web")),
+      webPackageStandaloneBytes: await sizePathBytes(join(appNodeModulesRoot, "@open-design", "web", ".next", "standalone")),
     },
     zipBytes: artifacts.zipPath == null ? null : await sizeExistingFileBytes(artifacts.zipPath),
   };
