@@ -1,9 +1,9 @@
 FROM node:24-bookworm-slim
 
-# Outils minimaux : git pour cloner si besoin, curl pour healthcheck,
-# python3 pour les sidecars optionnels d'Open Design, ca-certificates pour HTTPS
+# Outils minimaux + build-essential pour compiler les deps natives
+# (better-sqlite3 d'Open Design passe par node-gyp qui requiert make/g++/python).
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git curl ca-certificates python3 \
+    git curl ca-certificates python3 build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Corepack + pnpm version pinned par le repo open-design
