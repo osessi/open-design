@@ -10,27 +10,38 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Corepack + pnpm version pinned par le repo open-design
 RUN corepack enable && corepack prepare pnpm@10.33.2 --activate
 
-# Claude Code CLI installé globalement (utilisé par Open Design pour générer)
+# Claude Code CLI installé globalement (utilisé par Open Design pour générer).
+# Le CLI refuse --dangerously-skip-permissions en root (qu'Open Design utilise),
+# donc on créera un user non-root plus bas pour exécuter le daemon.
 RUN npm install -g @anthropic-ai/claude-code
+
+# User non-root "kodex" (uid 1100) — Claude Code accepte --dangerously-skip-permissions
+# uniquement quand le process ne tourne PAS en root.
+RUN useradd --create-home --uid 1100 --shell /bin/bash kodex
 
 WORKDIR /app
 
 # Cache layer : on copie d'abord les manifests pour profiter du cache Docker
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --chown=kodex:kodex package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Puis tout le repo (les dossiers sources + skills + design-systems + templates)
-COPY . .
+COPY --chown=kodex:kodex . .
 
-# Install + build packages internes
-RUN pnpm install --frozen-lockfile
-
-# Build le daemon (artifact dist/cli.js utilisé par tools-dev)
-RUN pnpm --filter @open-design/daemon build
+# Install + build packages internes (en root pour avoir le cache pnpm global, puis chown)
+RUN pnpm install --frozen-lockfile && \
+    pnpm --filter @open-design/daemon build && \
+    chown -R kodex:kodex /app
 
 # Volumes :
-#   /root/.claude → OAuth Claude Code (login persisté)
-#   /app/.od      → artefacts générés (maquettes HTML)
-VOLUME ["/root/.claude", "/app/.od"]
+#   /home/kodex/.claude → OAuth Claude Code (login persisté, dans le home du user)
+#   /app/.od            → artefacts générés (maquettes HTML)
+RUN mkdir -p /home/kodex/.claude /app/.od && \
+    chown -R kodex:kodex /home/kodex /app/.od
+VOLUME ["/home/kodex/.claude", "/app/.od"]
+
+# On switch en user non-root pour le runtime
+USER kodex
+ENV HOME=/home/kodex
 
 # Open Design est local-first : le daemon (7457) ET le web (50556) bindent
 # tous les deux sur 127.0.0.1. Pour qu'un reverse-proxy externe (Traefik
