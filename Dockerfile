@@ -2,8 +2,9 @@ FROM node:24-bookworm-slim
 
 # Outils minimaux + build-essential pour compiler les deps natives
 # (better-sqlite3 d'Open Design passe par node-gyp qui requiert make/g++/python).
+# socat sert à exposer le Next dev (qui bind 127.0.0.1) vers 0.0.0.0 pour Traefik.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git curl ca-certificates python3 build-essential \
+    git curl ca-certificates python3 build-essential socat \
     && rm -rf /var/lib/apt/lists/*
 
 # Corepack + pnpm version pinned par le repo open-design
@@ -31,17 +32,17 @@ RUN pnpm --filter @open-design/daemon build
 #   /app/.od      → artefacts générés (maquettes HTML)
 VOLUME ["/root/.claude", "/app/.od"]
 
-# Le web (Next.js dev) tourne sur 50556. Le daemon Express reste sur 127.0.0.1:7457
-# côté loopback (Open Design est local-first, le daemon ne s'expose pas).
-EXPOSE 50556
+# Open Design est local-first : le daemon (7457) ET le web (50556) bindent
+# tous les deux sur 127.0.0.1. Pour qu'un reverse-proxy externe (Traefik
+# Coolify) puisse les joindre, on expose 0.0.0.0:8080 et on fait un pont
+# socat → 127.0.0.1:50556. Coolify route design.kodex.digital vers le
+# port 8080 du container.
+EXPOSE 8080
 
-# Healthcheck : on hit le web Next sur 127.0.0.1
-HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
-    CMD curl -fsS http://127.0.0.1:50556 || exit 1
+# Healthcheck : on hit le port public exposé via socat
+HEALTHCHECK --interval=30s --timeout=5s --start-period=180s --retries=3 \
+    CMD curl -fsS http://127.0.0.1:8080 || exit 1
 
-# Démarrage en foreground :
-#   - daemon Express sur 7457 (loopback)
-#   - Next dev sur 0.0.0.0:50556 (exposé via Traefik Coolify)
-CMD ["pnpm", "tools-dev", "run", "web", \
-     "--daemon-port", "7457", \
-     "--web-port", "50556"]
+# Démarrage : socat en background pour relayer 0.0.0.0:8080 vers 127.0.0.1:50556,
+# puis tools-dev run web en foreground.
+CMD ["bash", "-c", "socat TCP-LISTEN:8080,fork,reuseaddr,bind=0.0.0.0 TCP:127.0.0.1:50556 & exec pnpm tools-dev run web --daemon-port 7457 --web-port 50556"]
