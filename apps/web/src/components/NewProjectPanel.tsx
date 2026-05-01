@@ -657,6 +657,11 @@ function PromptTemplatePicker({
   const [query, setQuery] = useState('');
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Remember which template the last failed fetch was trying to load so we
+  // can offer a one-click retry on the inline error banner instead of
+  // forcing the user to scan the list and click the same row again.
+  const [errorSummary, setErrorSummary] =
+    useState<PromptTemplateSummary | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
 
@@ -707,10 +712,17 @@ function PromptTemplatePicker({
   async function pickTemplate(summary: PromptTemplateSummary) {
     setLoadingId(summary.id);
     setError(null);
+    setErrorSummary(null);
     try {
       const detail = await fetchPromptTemplate(summary.surface, summary.id);
       if (!detail) {
+        // Keep the popover open and pin the failing template so the inline
+        // banner can offer a retry — fetchPromptTemplate swallows network /
+        // 404 / parse failures into null, so this is the only signal the
+        // user gets.
         setError(t('promptTemplates.fetchError'));
+        setErrorSummary(summary);
+        if (!open) setOpen(true);
         return;
       }
       onChange({ summary, prompt: detail.prompt });
@@ -719,6 +731,11 @@ function PromptTemplatePicker({
     } finally {
       setLoadingId(null);
     }
+  }
+
+  function dismissError() {
+    setError(null);
+    setErrorSummary(null);
   }
 
   function clear() {
@@ -827,7 +844,57 @@ function PromptTemplatePicker({
               })
             )}
           </div>
-          {error ? <div className="ds-picker-empty">{error}</div> : null}
+          {error ? (
+            <div
+              className="prompt-template-error"
+              role="alert"
+              data-testid="prompt-template-error"
+            >
+              <span className="prompt-template-error-text">{error}</span>
+              {errorSummary ? (
+                <button
+                  type="button"
+                  className="prompt-template-error-retry"
+                  data-testid="prompt-template-retry"
+                  onClick={() => void pickTemplate(errorSummary)}
+                  disabled={loadingId === errorSummary.id}
+                >
+                  {loadingId === errorSummary.id
+                    ? t('common.loading')
+                    : t('promptTemplates.fetchRetry')}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+      {!open && error ? (
+        <div
+          className="prompt-template-error standalone"
+          role="alert"
+          data-testid="prompt-template-error-standalone"
+        >
+          <span className="prompt-template-error-text">{error}</span>
+          {errorSummary ? (
+            <button
+              type="button"
+              className="prompt-template-error-retry"
+              onClick={() => void pickTemplate(errorSummary)}
+              disabled={loadingId === errorSummary.id}
+            >
+              {loadingId === errorSummary.id
+                ? t('common.loading')
+                : t('promptTemplates.fetchRetry')}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="prompt-template-error-dismiss"
+            onClick={dismissError}
+            aria-label={t('common.close')}
+          >
+            <Icon name="close" size={12} />
+          </button>
         </div>
       ) : null}
       {value ? (
@@ -849,6 +916,14 @@ function PromptTemplatePicker({
               onChange({ summary: value.summary, prompt: e.target.value })
             }
           />
+          {value.prompt.trim().length === 0 ? (
+            <span
+              className="prompt-template-edit-empty"
+              data-testid="prompt-template-empty-note"
+            >
+              {t('newproj.promptTemplateEmptyBodyNote')}
+            </span>
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -262,10 +262,13 @@ function renderMetadataBlock(
     lines.push(
       'The user picked this template as inspiration. Treat it as a structural and stylistic reference: borrow composition, palette cues, lighting language, lens/motion direction, and the level of detail. Adapt the wording to the user\'s actual subject and brief — do NOT generate the template subject verbatim. If a field above is unknown the user wants you to follow the template\'s defaults.',
     );
+    // Escape triple-backticks so a user-edited prompt body can't break
+    // out of the fenced block and inject system-prompt instructions.
+    const safe = tpl.prompt.replace(/```/g, '\\`\\`\\`');
     const truncated =
-      tpl.prompt.length > 4000
-        ? `${tpl.prompt.slice(0, 4000)}\n… (truncated ${tpl.prompt.length - 4000} chars)`
-        : tpl.prompt;
+      safe.length > 4000
+        ? `${safe.slice(0, 4000)}\n… (truncated ${safe.length - 4000} chars)`
+        : safe;
     lines.push('');
     lines.push('```text');
     lines.push(truncated);

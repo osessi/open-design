@@ -120,6 +120,7 @@ export const fa: Dict = {
   'promptTemplates.openPreviewTitle': 'باز کردن پرامپت و پیش‌نمایش',
   'promptTemplates.sourcePrefix': 'منبع:',
   'promptTemplates.fetchError': 'بارگذاری متن این قالب ممکن نبود.',
+  'promptTemplates.fetchRetry': 'تلاش مجدد',
   'promptTemplates.promptLabel': 'متن پرامپت',
   'promptTemplates.copyPrompt': 'کپی پرامپت',
   'promptTemplates.copyDone': 'کپی شد!',
@@ -196,6 +197,8 @@ export const fa: Dict = {
   'newproj.promptTemplateBodyLabel': 'پرامپت (قابل ویرایش)',
   'newproj.promptTemplateOptimizeHint':
     'هر چیزی را می‌توانید ویرایش کنید — تغییرات شما به بریف ایجنت اضافه می‌شود.',
+  'newproj.promptTemplateEmptyBodyNote':
+    'پرامپت خالی — هیچ ارجاعی از قالب به ایجنت ارسال نمی‌شود. متن اضافه کنید یا «بدون قالب» را انتخاب کنید تا ارجاع پاک شود.',
   'newproj.dsModeSingle': 'تکی',
   'newproj.dsModeMulti': 'چندگانه',
   'newproj.dsNoneTitle': 'هیچ — آزاد',

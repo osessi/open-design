@@ -118,6 +118,7 @@ export const ru: Dict = {
   'promptTemplates.openPreviewTitle': 'Открыть промпт и предпросмотр',
   'promptTemplates.sourcePrefix': 'Источник:',
   'promptTemplates.fetchError': 'Не удалось загрузить текст шаблона.',
+  'promptTemplates.fetchRetry': 'Повторить',
   'promptTemplates.promptLabel': 'Текст промпта',
   'promptTemplates.copyPrompt': 'Копировать промпт',
   'promptTemplates.copyDone': 'Скопировано!',
@@ -204,6 +205,8 @@ export const ru: Dict = {
   'newproj.promptTemplateBodyLabel': 'Промпт (можно править)',
   'newproj.promptTemplateOptimizeHint':
     'Меняйте всё что нужно — правки попадут в бриф агента.',
+  'newproj.promptTemplateEmptyBodyNote':
+    'Промпт пуст — ссылка на шаблон агенту не отправится. Добавьте текст или выберите «Без шаблона», чтобы убрать ссылку.',
 
   'designs.subRecent': 'Недавние',
   'designs.subYours': 'Ваши дизайны',

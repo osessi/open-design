@@ -118,6 +118,7 @@ export const ptBR: Dict = {
   'promptTemplates.openPreviewTitle': 'Abrir prompt e prévia',
   'promptTemplates.sourcePrefix': 'Fonte:',
   'promptTemplates.fetchError': 'Não foi possível carregar o corpo deste template.',
+  'promptTemplates.fetchRetry': 'Tentar novamente',
   'promptTemplates.promptLabel': 'Corpo do prompt',
   'promptTemplates.copyPrompt': 'Copiar prompt',
   'promptTemplates.copyDone': 'Copiado!',
@@ -204,6 +205,8 @@ export const ptBR: Dict = {
   'newproj.promptTemplateBodyLabel': 'Prompt (você pode ajustar)',
   'newproj.promptTemplateOptimizeHint':
     'Edite o que quiser — suas alterações entram no briefing do agente.',
+  'newproj.promptTemplateEmptyBodyNote':
+    'Prompt vazio — nenhuma referência de template será enviada ao agente. Adicione texto ou escolha "Nenhum" para limpar a referência.',
 
   'designs.subRecent': 'Recentes',
   'designs.subYours': 'Seus designs',

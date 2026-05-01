@@ -117,6 +117,7 @@ export const zhCN: Dict = {
   'promptTemplates.openPreviewTitle': '打开 Prompt 与预览',
   'promptTemplates.sourcePrefix': '来源：',
   'promptTemplates.fetchError': '无法加载此模板正文。',
+  'promptTemplates.fetchRetry': '重试',
   'promptTemplates.promptLabel': 'Prompt 正文',
   'promptTemplates.copyPrompt': '复制 Prompt',
   'promptTemplates.copyDone': '已复制！',
@@ -201,6 +202,8 @@ export const zhCN: Dict = {
   'newproj.promptTemplateBodyLabel': 'Prompt（可继续优化）',
   'newproj.promptTemplateOptimizeHint':
     '可以任意编辑 — 修改后的内容会作为 agent 生成时的参考。',
+  'newproj.promptTemplateEmptyBodyNote':
+    'Prompt 为空 — 不会向 agent 发送模板参考。继续输入内容，或点击"无 — 自行编写"以清除参考。',
 
   'designs.subRecent': '最近',
   'designs.subYours': '我的设计',

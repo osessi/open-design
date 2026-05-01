@@ -5962,3 +5962,63 @@ body.entry-resizing { cursor: col-resize; user-select: none; }
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
 }
+.prompt-template-edit-empty {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.prompt-template-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 4px 4px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in oklab, var(--danger, #d04b4b) 40%, var(--border-soft));
+  background: color-mix(in oklab, var(--danger, #d04b4b) 8%, var(--bg-panel));
+  color: var(--danger, #d04b4b);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.prompt-template-error.standalone {
+  margin-top: 10px;
+}
+.prompt-template-error-text {
+  flex: 1 1 auto;
+}
+.prompt-template-error-retry {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border: 1px solid var(--danger, #d04b4b);
+  background: transparent;
+  color: var(--danger, #d04b4b);
+  border-radius: var(--radius-sm);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.prompt-template-error-retry:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--danger, #d04b4b) 14%, transparent);
+}
+.prompt-template-error-retry:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.prompt-template-error-dismiss {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--danger, #d04b4b);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.prompt-template-error-dismiss:hover {
+  background: color-mix(in oklab, var(--danger, #d04b4b) 14%, transparent);
+}

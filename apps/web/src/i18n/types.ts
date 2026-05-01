@@ -199,6 +199,7 @@ export interface Dict {
   'newproj.promptTemplateEmpty': string;
   'newproj.promptTemplateBodyLabel': string;
   'newproj.promptTemplateOptimizeHint': string;
+  'newproj.promptTemplateEmptyBodyNote': string;
 
   // Prompt templates
   'promptTemplates.searchPlaceholder': string;
@@ -210,6 +211,7 @@ export interface Dict {
   'promptTemplates.openPreviewTitle': string;
   'promptTemplates.sourcePrefix': string;
   'promptTemplates.fetchError': string;
+  'promptTemplates.fetchRetry': string;
   'promptTemplates.promptLabel': string;
   'promptTemplates.copyPrompt': string;
   'promptTemplates.copyDone': string;

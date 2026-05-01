@@ -119,6 +119,7 @@ export const en: Dict = {
   'promptTemplates.openPreviewTitle': 'Open prompt and preview',
   'promptTemplates.sourcePrefix': 'Source:',
   'promptTemplates.fetchError': 'Could not load this template body.',
+  'promptTemplates.fetchRetry': 'Retry',
   'promptTemplates.promptLabel': 'Prompt body',
   'promptTemplates.copyPrompt': 'Copy prompt',
   'promptTemplates.copyDone': 'Copied!',
@@ -205,6 +206,8 @@ export const en: Dict = {
   'newproj.promptTemplateBodyLabel': 'Prompt (you can tune it)',
   'newproj.promptTemplateOptimizeHint':
     'Edit anything — your changes carry into the agent\'s brief.',
+  'newproj.promptTemplateEmptyBodyNote':
+    'Empty prompt — no template reference will be sent to the agent. Add text or pick "None" to clear the reference.',
 
   'designs.subRecent': 'Recent',
   'designs.subYours': 'Your designs',

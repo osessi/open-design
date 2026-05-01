@@ -117,6 +117,7 @@ export const zhTW: Dict = {
   'promptTemplates.openPreviewTitle': '開啟 Prompt 與預覽',
   'promptTemplates.sourcePrefix': '來源：',
   'promptTemplates.fetchError': '無法載入此範本文字。',
+  'promptTemplates.fetchRetry': '重試',
   'promptTemplates.promptLabel': 'Prompt 內容',
   'promptTemplates.copyPrompt': '複製 Prompt',
   'promptTemplates.copyDone': '已複製！',
@@ -201,6 +202,8 @@ export const zhTW: Dict = {
   'newproj.promptTemplateBodyLabel': 'Prompt（可繼續優化）',
   'newproj.promptTemplateOptimizeHint':
     '可隨意編輯 — 修改後的內容會作為 agent 生成時的參考。',
+  'newproj.promptTemplateEmptyBodyNote':
+    'Prompt 為空 — 不會向 agent 發送範本參考。請繼續輸入，或點擊「無 — 自行撰寫」以清除參考。',
 
   'designs.subRecent': '最近',
   'designs.subYours': '我的設計',
