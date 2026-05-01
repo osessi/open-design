@@ -369,6 +369,7 @@ async function writeWebStandaloneHookConfig(config: ToolPackConfig, paths: MacPa
         auditReportPath: paths.webStandaloneHookAuditPath,
         pruneCopiedSharp: true,
         pruneRootNext: true,
+        pruneRootSharp: true,
         resourceName: WEB_STANDALONE_RESOURCE_NAME,
         standaloneSourceRoot: join(webRoot, ".next", "standalone"),
         version: 1,

@@ -44,6 +44,8 @@ type NextApp = {
 };
 
 type StandaloneBackend = {
+  exitReason(): string | null;
+  isRunning(): boolean;
   origin: string;
   stop(): Promise<void>;
 };
@@ -335,6 +337,13 @@ async function startStandaloneBackend(webRoot: string): Promise<StandaloneBacken
     child.once("error", rejectSpawn);
     child.once("spawn", resolveSpawn);
   });
+  let standaloneRunning = true;
+  let standaloneExitReason: string | null = null;
+  child.once("exit", (code, signal) => {
+    standaloneRunning = false;
+    standaloneExitReason = `code=${code ?? "null"} signal=${signal ?? "null"}`;
+    console.error(`[open-design web] standalone Next.js server exited ${standaloneExitReason}`);
+  });
 
   try {
     await waitForStandaloneBackendReady(child, origin);
@@ -344,6 +353,12 @@ async function startStandaloneBackend(webRoot: string): Promise<StandaloneBacken
   }
 
   return {
+    exitReason() {
+      return standaloneExitReason;
+    },
+    isRunning() {
+      return standaloneRunning && child.exitCode == null && child.signalCode == null;
+    },
     origin,
     async stop() {
       await stopStandaloneChild(child);
@@ -401,6 +416,7 @@ async function createWebSidecarHandle(
   runtime: SidecarRuntimeContext<SidecarStamp>,
   httpServer: HttpServer,
   closeRuntime: () => Promise<void> | void,
+  isRuntimeRunning?: () => boolean,
 ): Promise<WebSidecarHandle> {
   const port = await listen(httpServer, parsePort(process.env[WEB_PORT_ENV]));
   const state: WebStatusSnapshot = {
@@ -415,6 +431,13 @@ async function createWebSidecarHandle(
   const stoppedPromise = new Promise<void>((resolveStop) => {
     resolveStopped = resolveStop;
   });
+
+  function refreshRuntimeState(): void {
+    if (stopped || isRuntimeRunning == null || isRuntimeRunning()) return;
+    state.state = "stopped";
+    state.url = null;
+    state.updatedAt = new Date().toISOString();
+  }
 
   async function stop(): Promise<void> {
     if (stopped) return;
@@ -435,6 +458,7 @@ async function createWebSidecarHandle(
       const request = normalizeWebSidecarMessage(message);
       switch (request.type) {
         case SIDECAR_MESSAGES.STATUS:
+          refreshRuntimeState();
           return { ...state };
         case SIDECAR_MESSAGES.SHUTDOWN:
           setImmediate(() => {
@@ -453,6 +477,7 @@ async function createWebSidecarHandle(
 
   return {
     async status() {
+      refreshRuntimeState();
       return { ...state };
     },
     stop,
@@ -506,6 +531,11 @@ async function startStandaloneNextSidecar(
   const daemonOrigin = resolveDaemonOrigin();
   const backend = await startStandaloneBackend(webRoot);
   const httpServer = createHttpServer(createDaemonProxyHandler(daemonOrigin, async (request, response) => {
+    if (!backend.isRunning()) {
+      response.statusCode = 502;
+      response.end(`standalone Next.js server is not running${backend.exitReason() == null ? "" : ` (${backend.exitReason()})`}`);
+      return;
+    }
     const target = resolveHttpProxyTarget(backend.origin, request.url);
     if (target == null) {
       response.statusCode = 400;
@@ -516,7 +546,7 @@ async function startStandaloneNextSidecar(
   }));
 
   try {
-    return await createWebSidecarHandle(runtime, httpServer, backend.stop);
+    return await createWebSidecarHandle(runtime, httpServer, backend.stop, backend.isRunning);
   } catch (error) {
     await backend.stop().catch(() => undefined);
     throw error;

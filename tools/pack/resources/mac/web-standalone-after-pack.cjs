@@ -91,6 +91,7 @@ async function readHookConfig() {
     auditReportPath,
     pruneCopiedSharp: requireBoolean(raw, "pruneCopiedSharp"),
     pruneRootNext: requireBoolean(raw, "pruneRootNext"),
+    pruneRootSharp: requireBoolean(raw, "pruneRootSharp"),
     resourceName,
     standaloneSourceRoot,
     webPublicSourceRoot,
@@ -273,7 +274,7 @@ async function pruneCopiedSharp(destinationRoot) {
   return removedPaths;
 }
 
-async function pruneBrokenSymlinks(root, current = root, removedPaths = []) {
+async function pruneBrokenSymlinks(root, current = root, removedPaths = [], reason = "broken symlink") {
   let metadata;
   try {
     metadata = await lstat(current);
@@ -285,7 +286,7 @@ async function pruneBrokenSymlinks(root, current = root, removedPaths = []) {
     try {
       await stat(current);
     } catch {
-      await removePathAndRecord(current, "copied broken symlink", removedPaths);
+      await removePathAndRecord(current, reason, removedPaths);
     }
     return removedPaths;
   }
@@ -294,7 +295,7 @@ async function pruneBrokenSymlinks(root, current = root, removedPaths = []) {
 
   const entries = await readdir(current, { withFileTypes: true }).catch(() => []);
   for (const entry of entries) {
-    await pruneBrokenSymlinks(root, path.join(current, entry.name), removedPaths);
+    await pruneBrokenSymlinks(root, path.join(current, entry.name), removedPaths, reason);
   }
   return removedPaths;
 }
@@ -417,6 +418,37 @@ async function pruneRootNext(appPath) {
   return removedPaths;
 }
 
+async function pruneRootSharp(appPath) {
+  const appNodeModulesRoot = path.join(appPath, "Contents", "Resources", "app", "node_modules");
+  const pnpmRoot = path.join(appNodeModulesRoot, ".pnpm");
+  const removedPaths = [];
+
+  await removePathAndRecord(path.join(appNodeModulesRoot, "sharp"), "root sharp package", removedPaths);
+  await pruneImgScope(path.join(appNodeModulesRoot, "@img"), "root @img sharp package", removedPaths);
+  await removePathAndRecord(path.join(pnpmRoot, "node_modules", "sharp"), "root pnpm sharp symlink", removedPaths);
+  await pruneImgScope(path.join(pnpmRoot, "node_modules", "@img"), "root pnpm @img sharp symlink", removedPaths);
+
+  const pnpmEntries = await readdir(pnpmRoot).catch(() => []);
+  for (const entry of pnpmEntries) {
+    if (isPrunablePnpmSharpEntry(entry)) {
+      await removePathAndRecord(path.join(pnpmRoot, entry), "root pnpm sharp package", removedPaths);
+    }
+  }
+
+  return removedPaths;
+}
+
+async function auditNoBrokenSymlinks(root, label) {
+  const stats = await collectClosureStats(root);
+  if (stats.brokenSymlinks.length > 0) {
+    throw new Error(`[tools-pack web-standalone] ${label} has broken symlinks: ${stats.brokenSymlinks.join(", ")}`);
+  }
+  return {
+    brokenSymlinks: stats.brokenSymlinks,
+    symlinks: stats.symlinks,
+  };
+}
+
 module.exports = async function webStandaloneAfterPack(context) {
   if (context?.electronPlatformName != null && context.electronPlatformName !== "darwin") return;
 
@@ -428,16 +460,35 @@ module.exports = async function webStandaloneAfterPack(context) {
 
   const installResult = await installStandaloneResource(config, appPath);
   const copiedPrune = config.pruneCopiedSharp ? await pruneCopiedSharp(installResult.destinationRoot) : [];
-  const brokenSymlinkPrune = await pruneBrokenSymlinks(installResult.destinationRoot);
+  const brokenSymlinkPrune = await pruneBrokenSymlinks(
+    installResult.destinationRoot,
+    installResult.destinationRoot,
+    [],
+    "copied broken symlink",
+  );
   const copiedAudit = await auditCopiedStandalone(config, installResult);
   const rootPrune = config.pruneRootNext ? await pruneRootNext(appPath) : [];
+  const rootSharpPrune = config.pruneRootSharp ? await pruneRootSharp(appPath) : [];
+  const rootBrokenSymlinkPrune = await pruneBrokenSymlinks(
+    path.join(appPath, "Contents", "Resources", "app", "node_modules"),
+    path.join(appPath, "Contents", "Resources", "app", "node_modules"),
+    [],
+    "root broken symlink",
+  );
+  const rootSymlinkAudit = await auditNoBrokenSymlinks(
+    path.join(appPath, "Contents", "Resources", "app", "node_modules"),
+    "root app node_modules",
+  );
   const report = {
     appPath,
     brokenSymlinkPrune,
     copiedAudit,
     copiedPrune,
     generatedAt: new Date().toISOString(),
+    rootBrokenSymlinkPrune,
     rootPrune,
+    rootSharpPrune,
+    rootSymlinkAudit,
     sourceWebRoot: installResult.sourceWebRoot,
     version: 1,
   };

@@ -62,7 +62,7 @@ function resolveToolPackBuildOutput(value: string | undefined): ToolPackBuildOut
 }
 
 function resolveToolPackWebOutputMode(value: string | undefined): ToolPackWebOutputMode {
-  if (value == null || value.length === 0) return "server";
+  if (value == null || value.length === 0) return "standalone";
   if (value === "server" || value === "standalone") return value;
   throw new Error(`unsupported OD_WEB_OUTPUT_MODE value: ${value}`);
 }
